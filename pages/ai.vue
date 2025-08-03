@@ -24,7 +24,7 @@ let aiResponse = ref<{ id: string, description: string, images: string[] }[]>([
   }
 ])
 
-let formStatus = ref<'filling' | 'submitted' | 'finished'>('filling')
+let formStatus = ref<'filling' | 'submitted' | 'finished'>('finished')
 let promptForm = ref<PromptForm>()
 let copyResultDialog = ref(false)
 
@@ -168,10 +168,18 @@ async function copy(cropDescription: string) {
       </v-col>
     </v-row>
 
-    <v-dialog v-model="copyResultDialog" width="auto">
-      <v-card prepend-icon="mdi-check-circle-outline" title="Скопировано!">
+    <v-dialog v-model="copyResultDialog" fullscreen closable>
+      <v-card>
+        <v-card-title class="d-flex justify-space-between">
+          <div class="d-flex align-center">
+            <v-icon class="mr-3">mdi-check-circle-outline</v-icon>
+            Скопировано!
+          </div>
+
+          <v-btn @click="copyResultDialog = false" variant="text" icon="mdi-close"></v-btn>
+        </v-card-title>
         <v-card-text>
-          <p class="text-sm text-center mt-4">Вставьте текст в <b>комментарий</b> к записи</p>
+          <p class="text-lg text-center mt-4">Вставьте текст в <b>комментарий</b> к записи</p>
           <div class="d-flex justify-center">
             <v-icon>mdi-arrow-down-thin</v-icon>
           </div>
@@ -179,14 +187,14 @@ async function copy(cropDescription: string) {
           <div class="d-flex justify-center">
             <v-icon>mdi-arrow-down-thin</v-icon>
           </div>
-          <p class="text-sm text-center mt-2">Мы <b>учтем</b> при стрижке!</p>
+          <p class="text-lg text-center mt-2">Мы <b>учтем</b> при стрижке!</p>
         </v-card-text>
-        <template v-slot:actions>
-          <NuxtLink to="https://n962263.yclients.com/company/894109/personal/menu?o=" class="w-100">
-            <v-btn class="w-100" color="accent" size="x-large" text="понял, записаться" variant="tonal"
+        <v-card-actions>
+          <NuxtLink to="https://n962263.yclients.com/company/894109/personal/menu?o=" class="w-100 ma-4">
+            <v-btn class="w-100" color="accent" size="x-large" text="окей, записаться" variant="tonal"
               @click="copyResultDialog = false"></v-btn>
           </NuxtLink>
-        </template>
+        </v-card-actions>
       </v-card>
     </v-dialog>
   </v-container>
