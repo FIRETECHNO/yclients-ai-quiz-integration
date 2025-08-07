@@ -4,20 +4,8 @@ export function useYclients() {
   const BOOKING_URL = "https://n1595189.yclients.com";
 
   const MAX_COMMENT_LENGTH = 149;
-  let _rawQuizComment = ref<string>('');
 
-  let quizComment = computed<string>({
-    get() {
-      return _rawQuizComment.value;
-    },
-    set(newValue) {
-      if (newValue.length > MAX_COMMENT_LENGTH) {
-        _rawQuizComment.value = newValue.slice(0, MAX_COMMENT_LENGTH);
-      } else {
-        _rawQuizComment.value = newValue;
-      }
-    }
-  });
+  let quizComment = ref<string>("")
 
 
   const recommendedServices = ref<any[]>([]);
@@ -37,10 +25,34 @@ export function useYclients() {
     }
   }
 
+  async function updateRecordComment(recordId: string): Promise<any> {
+    if (!recordId) return console.error("[updateRecordComment()]: Нет recordId")
+
+    if (!quizComment.value) return console.warn("no comment presented");
+
+    if (quizComment.value.length > MAX_COMMENT_LENGTH) quizComment.value = quizComment.value.slice(0, MAX_COMMENT_LENGTH)
+
+    const { data, error } = await useFetch<{
+      success: boolean,
+      data: any[],
+      meta: any
+    }>(
+      `/api/yclients/update-record-comment`,
+      {
+        method: "POST",
+        body: {
+          companyId: COMPANY_ID,
+          recordId,
+          comment: quizComment.value
+        }
+      });
+    return data;
+  }
+
   return {
     // vars
     recommendedServices, COMPANY_ID, BOOKING_URL, quizComment,
     // funcs
-    getRecommendedServices
+    getRecommendedServices, updateRecordComment,
   };
 }

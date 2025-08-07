@@ -1,12 +1,18 @@
 <script setup lang="ts">
+import { toast } from 'vue3-toastify';
+
 definePageMeta({ layout: "ai" })
 
-let { BOOKING_URL } = useYclients()
+let { BOOKING_URL, updateRecordComment, quizComment } = useYclients()
+let route = useRoute();
 
 
 onMounted(() => {
-  window.addEventListener('message', (event) => {
-    if (event.origin !== 'https://n1595189.yclients.com') {
+  if (route.query.quiz_comment) {
+    quizComment.value = route.query.quiz_comment.toString();
+  }
+  window.addEventListener('message', async (event) => {
+    if (event.origin !== BOOKING_URL) {
       console.warn("Message from untrusted origin:", event.origin);
       return;
     }
@@ -17,7 +23,10 @@ onMounted(() => {
 
     switch (event.data.type) {
       case 'record_created':
-        console.log('SUCCESS: Received record id from iframe:', event.data.data.record.id);
+        let res = await updateRecordComment(event.data.data.record_id)
+        if (res.success) {
+          toast("Барберу передан ваш выбор в опросе!", { type: "success" })
+        }
         break;
       default:
         console.log('Received unknown message type:', event.data.type);

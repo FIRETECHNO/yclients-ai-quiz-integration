@@ -32,7 +32,7 @@ let { quizComment } = useYclients();
 
 let additionalInfo = computed(() => {
   if (promptForm.value?.additional) {
-    return ", доп: " + promptForm.value?.additional;
+    return "доп: " + promptForm.value?.additional + ", ";
   }
   return ""
 })
@@ -101,6 +101,8 @@ async function produceComment(cropDescription: string) {
 
 
   // short copy, 150 letters is limit
+  textToCopy += additionalInfo.value;
+
   textToCopy += `${promptForm.value?.universal ? promptForm.value?.universal + ', ' : ""}`
   textToCopy += `${promptForm.value?.hairStyling ? promptForm.value?.hairStyling + ', ' : ""}`
   textToCopy += `${promptForm.value?.haircutFrequency ? promptForm.value?.haircutFrequency + ', ' : ""}`
@@ -108,10 +110,9 @@ async function produceComment(cropDescription: string) {
   textToCopy += `${promptForm.value?.hairType ? promptForm.value?.hairType + ', ' : ""}`
   textToCopy += `${promptForm.value?.faceShape ? promptForm.value?.faceShape : ""}`
 
-  textToCopy += additionalInfo.value;
 
   quizComment.value = textToCopy;
-  router.push("/booking")
+  router.push(`/booking?quiz_comment=${textToCopy}`)
 }
 
 </script>
