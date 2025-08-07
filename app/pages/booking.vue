@@ -24,7 +24,8 @@ onMounted(() => {
     switch (event.data.type) {
       case 'record_created':
         let res = await updateRecordComment(event.data.data.record_id)
-        if (res.success) {
+
+        if (res.value.success) {
           toast("Барберу передан ваш выбор в опросе!", { type: "success" })
         }
         break;
