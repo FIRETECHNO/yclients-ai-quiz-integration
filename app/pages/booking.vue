@@ -25,7 +25,7 @@ onMounted(() => {
       case 'record_created':
         let res = await updateRecordComment(event.data.data.record_id)
 
-        if (res.value.success) {
+        if (res.value?.success) {
           toast("Барберу передан ваш выбор в опросе!", { type: "success" })
         }
         break;
@@ -38,7 +38,13 @@ onMounted(() => {
 </script>
 <template>
   <div>
-    <iframe height="545px" max-width="320px" frameborder="0" allowtransparency="true" id="ms_booking_iframe"
+    <iframe max-width="320px" frameborder="0" allowtransparency="true" id="ms_booking_iframe" class="iframe"
       :src="BOOKING_URL"></iframe>
   </div>
 </template>
+<style scoped lang="scss">
+.iframe {
+  width: 100vw;
+  height: 100vh;
+}
+</style>
