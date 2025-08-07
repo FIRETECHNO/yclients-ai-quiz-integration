@@ -70,7 +70,7 @@ watch(universal, (newValue) => {
   let res = "";
   for (let idx of newValue) {
     // Берем только .value
-    res += selectVariants.value.universal[idx].value + " ";
+    res += selectVariants.value.universal[idx]?.value + " ";
   }
   promptForm.value.universal = res.trim();
 })
@@ -80,7 +80,7 @@ watch(hairStyling, (newValue) => {
   let res = "";
   for (let idx of newValue) {
     // Берем только .value
-    res += selectVariants.value.hairStyling[idx].value + " ";
+    res += selectVariants.value.hairStyling[idx]?.value + " ";
   }
   promptForm.value.hairStyling = res.trim();
 })
@@ -90,7 +90,7 @@ watch(haircutFrequency, (newValue) => {
   let res = "";
   for (let idx of newValue) {
     // Берем только .value
-    res += selectVariants.value.haircutFrequency[idx].value + " ";
+    res += selectVariants.value.haircutFrequency[idx]?.value + " ";
   }
   promptForm.value.haircutFrequency = res.trim();
 })
@@ -99,7 +99,7 @@ let formalStyle = ref<number | null>(null)
 watch(formalStyle, (newValue: number | null) => {
   if (newValue != null) {
     // Берем только .value
-    promptForm.value.formalStyle = selectVariants.value.formalStyle[newValue].value;
+    promptForm.value.formalStyle = selectVariants.value.formalStyle[newValue]?.value || "";
   } else {
     promptForm.value.formalStyle = "";
   }
@@ -109,7 +109,7 @@ let hairType = ref<number | null>(null)
 watch(hairType, (newValue: number | null) => {
   if (newValue != null) {
     // Берем только .value
-    promptForm.value.hairType = selectVariants.value.hairType[newValue].value;
+    promptForm.value.hairType = selectVariants.value.hairType[newValue]?.value || "";
   } else {
     promptForm.value.hairType = "";
   }
@@ -119,7 +119,7 @@ let faceShape = ref<number | null>(null)
 watch(faceShape, (newValue: number | null) => {
   if (newValue != null) {
     // Берем только .value
-    promptForm.value.faceShape = selectVariants.value.faceShape[newValue].value;
+    promptForm.value.faceShape = selectVariants.value.faceShape[newValue]?.value || "";
   } else {
     promptForm.value.faceShape = "";
   }
@@ -129,7 +129,7 @@ let additional = ref<number[] | []>([])
 watch(additional, (newValue: number[] | []) => {
   // Собираем значения через map и join - это более кратко и чисто
   promptForm.value.additional = newValue
-    .map(idx => selectVariants.value.additional[idx].value)
+    .map(idx => selectVariants.value.additional[idx]?.value)
     .join(', ');
 })
 
@@ -247,9 +247,7 @@ function submit() {
       </template>
     </v-stepper>
 
-    <NuxtLink to="https://n962263.yclients.com/company/894109/personal/menu?o=">
-      <v-fab icon="mdi-lightbulb-on-outline" variant="tonal" class="floating-btn"></v-fab>
-    </NuxtLink>
+    <v-fab icon="mdi-cart" variant="tonal" class="floating-btn" to="/booking"></v-fab>
   </ClientOnly>
 </template>
 <style scoped>

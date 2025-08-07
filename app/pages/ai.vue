@@ -3,7 +3,6 @@ definePageMeta({
   layout: 'ai'
 })
 
-import { toast } from "vue3-toastify"
 
 import type { PromptForm } from "~/types/prompt-form.interface"
 
@@ -24,9 +23,12 @@ let aiResponse = ref<{ id: string, description: string, images: string[] }[]>([
   }
 ])
 
-let formStatus = ref<'filling' | 'submitted' | 'finished'>('finished')
+const router = useRouter();
+
+let formStatus = ref<'filling' | 'submitted' | 'finished'>('filling')
 let promptForm = ref<PromptForm>()
-let copyResultDialog = ref(false)
+
+let { quizComment } = useYclients();
 
 let additionalInfo = computed(() => {
   if (promptForm.value?.additional) {
@@ -85,7 +87,7 @@ function goToFormBeginning() {
   formStatus.value = 'filling'
 }
 
-async function copy(cropDescription: string) {
+async function produceComment(cropDescription: string) {
   let copiedCropName = cropDescription.split('\n')[0] // cropDescription is "Buzz Cut(Ежик)\nОписание: Короткая маш..."
   let textToCopy = `Название: ${copiedCropName} \nВыбор:\n`;
   /*
@@ -108,22 +110,8 @@ async function copy(cropDescription: string) {
 
   textToCopy += additionalInfo.value;
 
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    await navigator.clipboard.writeText(textToCopy)
-    copyResultDialog.value = true;
-  } else {
-    const textarea = document.createElement("textarea");
-    textarea.value = textToCopy;
-    document.body.appendChild(textarea);
-    textarea.select();
-    try {
-      document.execCommand("copy");
-      copyResultDialog.value = true;
-    } catch { }
-    document.body.removeChild(textarea);
-  }
-
-  await new Promise(r => setTimeout(r, 5000))
+  quizComment.value = textToCopy;
+  router.push("/booking")
 }
 
 </script>
@@ -152,23 +140,21 @@ async function copy(cropDescription: string) {
 
                 <v-col cols="12" class="d-flex justify-end">
                   <v-btn density="comfortable" color="accent" size="x-large" variant="tonal"
-                    @click="copy(crop.description)">
-                    скопировать
+                    @click="produceComment(crop.description)">
+                    хочу так же!
                   </v-btn>
                 </v-col>
               </v-card>
             </v-col>
           </v-row>
 
-          <NuxtLink to="https://n962263.yclients.com/company/894109/personal/menu?o=" class="w-100">
-            <v-btn class="mt-10 w-100" color="accent" size="x-large">записаться</v-btn>
-          </NuxtLink>
-          <v-btn class="mt-5 mb-0" @click="goToFormBeginning" size="small">понял, на главную</v-btn>
+          <v-btn class="mt-10 w-100" color="accent" size="x-large" @click="router.push('/booking')">записаться</v-btn>
+          <v-btn class="mt-5 mb-0" @click="goToFormBeginning" size="small">понял, ещё раз!</v-btn>
         </div>
       </v-col>
     </v-row>
 
-    <v-dialog v-model="copyResultDialog" fullscreen closable>
+    <!-- <v-dialog v-model="copyResultDialog" fullscreen closable>
       <v-card>
         <v-card-title class="d-flex justify-space-between">
           <div class="d-flex align-center">
@@ -196,7 +182,7 @@ async function copy(cropDescription: string) {
           </NuxtLink>
         </v-card-actions>
       </v-card>
-    </v-dialog>
+    </v-dialog> -->
   </v-container>
 </template>
 <style scoped lang="scss">
