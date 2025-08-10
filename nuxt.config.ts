@@ -11,7 +11,10 @@ export default defineNuxtConfig({
   build: {
     transpile: ['vuetify'],
   },
-  css: ['~/assets/css/main.scss'],
+  css: [
+    '~/assets/css/main.scss',
+    '~/assets/css/tailwind.css'
+  ],
   postcss: {
     plugins: {
       tailwindcss: {},
@@ -19,6 +22,7 @@ export default defineNuxtConfig({
     },
   },
   modules: [
+    '@nuxtjs/tailwindcss',
     (_options, nuxt) => {
       nuxt.hooks.hook('vite:extendConfig', (config) => {
         // @ts-expect-error

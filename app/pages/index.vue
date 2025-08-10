@@ -7,7 +7,7 @@
         <img src="~/assets/images/Location_White_Color_Logo.png" alt="" class="logo">
       </v-col>
       <v-col cols="12" class="mt-3 d-flex justify-center flex-column align-center">
-        <NuxtLink to="https://n962263.yclients.com/company/894109/personal/menu?o=">
+        <NuxtLink to="/booking">
           <GradientButton :bg-color="'#000'" :borderRadius="16" :border-width="1.8" :blur="30"
             :colors="['#D9D9D9', '#FF7878', '#FC5B5B', '#FFFFFF']" style="font-weight: 600;">
             Записаться

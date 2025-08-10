@@ -1,7 +1,7 @@
 export function useYclients() {
   const CATEGORY_FOR_RECOMMENDATIONS = 21444146;
-  const COMPANY_ID = 1434780;
-  const BOOKING_URL = "https://n1595189.yclients.com";
+  const COMPANY_ID = 894109;
+  const BOOKING_URL = "https://n1603683.yclients.com";
 
   const MAX_COMMENT_LENGTH = 149;
 
