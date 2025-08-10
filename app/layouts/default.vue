@@ -1,3 +1,8 @@
+<script setup lang="ts">
+useHead({
+  title: 'Location 21 - Запись',
+})
+</script>
 <template>
   <div class="lamp-background">
     <slot></slot>
