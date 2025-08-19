@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { toast } from 'vue3-toastify';
 
-definePageMeta({ layout: "ai" })
+definePageMeta({ layout: "blank" })
 
 let { BOOKING_URL, updateRecordComment, quizComment } = useYclients()
 let route = useRoute();
