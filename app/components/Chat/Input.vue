@@ -1,5 +1,5 @@
 <script setup lang="ts">
-let question = ref<string>("");
+const question = ref<string>("");
 </script>
 <template>
   <v-form class="w-100">
@@ -12,15 +12,12 @@ let question = ref<string>("");
         hide-details
       />
       <v-btn
-        :color="accent"
         class="flex-shrink-0"
-        @click="$emit('Submit', question.value)"
+        @click="$emit('Submit', question.valueOf())"
         height="60"
         width="40"
       >
-        <v-icon style="font-size: 40px; width: 100%; height: 100%">
-          mdi-arrow-up-circle-outline
-        </v-icon></v-btn
+        <v-icon size="40"> mdi-arrow-up-circle-outline </v-icon></v-btn
       >
     </div>
   </v-form>
