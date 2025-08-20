@@ -6,7 +6,7 @@ export default defineNuxtRouteMiddleware((from, to) => {
 
   if (from.query?.company_id) {
     companyId.value = Number(to.query.company_id);
-    updateCompanyId();
+    const success = updateCompanyId();
   } else if (!companyId.value) {
     return navigateTo("/select-company");
   }
