@@ -2,11 +2,12 @@ export default defineNuxtRouteMiddleware((from, to) => {
   return true;
   if (from.fullPath.startsWith("/select-company")) return true;
 
-  let { companyId } = useCompany()
+  let { companyId, updateCompanyId } = useCompany();
 
   if (from.query?.company_id) {
     companyId.value = Number(to.query.company_id);
+    updateCompanyId();
   } else if (!companyId.value) {
-    return navigateTo("/select-company")
+    return navigateTo("/select-company");
   }
-})
+});
