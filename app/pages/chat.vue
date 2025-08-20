@@ -3,8 +3,11 @@ definePageMeta({
   layout: "chat-layout"
 })
 
-function processSubmit(question: string) {
-  console.log(question);
+const chatStore = useChat();
+
+
+async function processSubmit(question: string) {
+  await chatStore.sendMessage(new Message(question, {}, true));
 }
 </script>
 <template>
