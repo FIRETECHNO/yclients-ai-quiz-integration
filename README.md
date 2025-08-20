@@ -20,56 +20,26 @@ yarn install
 bun install
 ```
 
-## Development Server
+## [YClients API](https://developers.yclients.com/ru/#section/Koncepty-YCLIENTS-API) основные понятия и наша интерпретация
 
-Start the development server on `http://localhost:3000`:
+- Компания - **company**
 
-```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
+```ts
+useCompany() // composable для работы с ним
 ```
 
-## Production
+- Пользователь Пользователи могут управлять компаниями, они имеют права доступа к определенным настройкам компании. Не все пользователи имеют доступ ко всем настройкам. Для того, чтобы изменять те или иные настройки нужно сначала получить API-ключ пользователя с соответсвующими правами.
 
-Build the application for production:
+- Категория услуг Все услуги компании группируются в рамках категории услуг .
 
-```bash
-# npm
-npm run build
+- Услуга Как правило, запись производится на определенную услугу, которую оказывает определенный сотрудник в определенной компании. Услуга имеет диапазон стоимости и некоторые другие параметры.
 
-# pnpm
-pnpm build
+- Сотрудник Как правило, запись производится, к определенному сотруднику или ресурсу (например, подъемник или квест-комната).
 
-# yarn
-yarn build
+- Расписание сотрудника У каждого сотрудника есть график работы - итервалы времени, в которое сотрудник работает с клиентами.
 
-# bun
-bun run build
-```
+- Свободное время сотрудника Время на которое можно записаться к сотруднику, т.е. интервалы времени, в которые он свободен.
 
-Locally preview production build:
+- Запись Интервал времени, в которое конкретный сотрудник оказывает конкретному клиенту услуги. Во время записи сотрудник занят.
 
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+- Клиент Человек, который записывался на услугу в компанию.

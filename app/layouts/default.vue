@@ -4,15 +4,12 @@ useHead({
 })
 </script>
 <template>
-  <div class="lamp-background">
-    <slot></slot>
-  </div>
+  <v-responsive>
+    <v-app>
+      <v-main class="d-flex align-center">
+        <slot></slot>
+      </v-main>
+    </v-app>
+  </v-responsive>
 </template>
-<style scoped lang="scss">
-.lamp-background {
-  height: 100dvh;
-  width: 100dvw;
-  background-image: url('~/assets/images/lamp-background.jpg');
-  background-size: cover;
-}
-</style>
+<style scoped lang="scss"></style>

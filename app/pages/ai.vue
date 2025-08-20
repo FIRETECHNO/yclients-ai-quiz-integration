@@ -1,9 +1,4 @@
 <script setup lang="ts">
-definePageMeta({
-  layout: 'blank'
-})
-
-
 import type { PromptForm } from "~/types/prompt-form.interface"
 
 let aiResponse = ref<{ id: string, description: string, images: string[] }[]>([

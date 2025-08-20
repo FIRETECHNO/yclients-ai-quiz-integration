@@ -18,8 +18,6 @@ function processSubmit(question: string) {
 </template>
 <style scoped lang="scss">
 .chat-container {
-  // background-color: ;
   display: flex;
-  height: 140dvh;
 }
 </style>
