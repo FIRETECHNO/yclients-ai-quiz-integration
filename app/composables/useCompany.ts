@@ -1,4 +1,4 @@
-import { serverUpdateCompanyId } from "../api/CompanyApi";
+import CompanyApi from "../api/CompanyApi";
 
 export function useCompany() {
   let companyId = useState<number | null>(); // id текущей компании
@@ -10,7 +10,7 @@ export function useCompany() {
     }
 
     try {
-      const success = await serverUpdateCompanyId(companyId.value);
+      const success = await CompanyApi.serverUpdateCompanyId(companyId.value);
       return success.success;
     } catch (error) {
       console.error("Failed to update company ID:", error);
