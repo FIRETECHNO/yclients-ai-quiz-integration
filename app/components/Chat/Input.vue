@@ -1,10 +1,10 @@
 <script setup lang="ts">
-const emit = defineEmits(["submit"])
+const emit = defineEmits(["send-message"])
 
 const question = ref<string>("");
 
 function submit() {
-  emit("submit", question.value)
+  emit("send-message", question.value)
 }
 </script>
 <template>
