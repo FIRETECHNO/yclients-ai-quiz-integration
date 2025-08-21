@@ -3,7 +3,7 @@ declare global {
     _id?: string
     stringContent: string
     payload: Record<string, any>
-    author?: string | "ai-agent"
+    author?: number | -1
     isIncoming: boolean
 
     toJSON(): Record<string, any>

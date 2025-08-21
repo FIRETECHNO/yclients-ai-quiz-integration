@@ -2,14 +2,14 @@ class Message implements IMessage {
   _id?: string
   stringContent: string
   payload: Record<string, any>
-  author?: string | "ai-agent"
+  author?: number | -1
   isIncoming: boolean
 
   constructor(
     stringContent: string,
     payload: Record<string, any> = {},
     isIncoming: boolean,
-    author?: string | "ai-agent",
+    author?: number | -1,
     _id?: string,
   ) {
     this._id = _id
