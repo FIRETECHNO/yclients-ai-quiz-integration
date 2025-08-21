@@ -12,29 +12,27 @@ async function processSubmit(question: string) {
 }
 </script>
 <template>
-  <v-container>
-    <v-row class="d-flex justify-center">
-      <v-col cols="12" md="8" xl="6" class="chat-container">
-        <v-row>
-          <v-col v-for="(msg, index) of messages" :key="index" cols="12">
-            <!-- входящее сообщение -->
-            <ChatMessageIncoming :message="msg" v-if="msg.isIncoming" />
-            <!-- входящее сообщение -->
+  <v-container fluid class="fill-height">
+    <v-row class="d-flex justify-center align-center fill-height">
+      <v-col cols="12" md="8" xl="6" class="fill-height">
+        <v-sheet class="d-flex flex-column fill-height rounded-lg elevation-2">
 
-            <!-- исходящее сообщение -->
-            <ChatMessageOutgoing :message="msg" v-else />
-            <!-- исходящее сообщение -->
-          </v-col>
-          <v-col cols="12">
-            <ChatInput @send-message="processSubmit" />
-          </v-col>
-        </v-row>
+          <!-- Сообщения -->
+          <v-card-text class="flex-grow-1 overflow-y-auto">
+            <div v-for="(msg, index) of messages" :key="index" class="mb-2">
+              <ChatMessageIncoming v-if="msg.isIncoming" :message="msg" />
+              <ChatMessageOutgoing v-else :message="msg" />
+            </div>
+          </v-card-text>
+
+          <!-- Поле ввода -->
+          <v-divider></v-divider>
+          <v-card-actions>
+            <ChatInput @send-message="processSubmit" class="w-100" />
+          </v-card-actions>
+        </v-sheet>
       </v-col>
     </v-row>
   </v-container>
 </template>
-<style scoped lang="scss">
-.chat-container {
-  display: flex;
-}
-</style>
+<style scoped lang="scss"></style>
