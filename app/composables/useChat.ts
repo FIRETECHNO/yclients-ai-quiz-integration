@@ -1,5 +1,6 @@
-import { useUser } from "./useUser";
 import ChatApi from "~/api/ChatApi";
+
+
 export function useChat() {
   let messages = useState<IMessage[]>(() => []);
   let chatStatus = useState<"ready" | "ai-thinking">("ready");
