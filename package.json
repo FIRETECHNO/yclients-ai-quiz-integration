@@ -4,18 +4,24 @@
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "dev": "NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/russian-trusted/russian_trusted_root_ca_pem.crt nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.810.0",
+    "@langchain/community": "^0.3.53",
+    "@langchain/core": "^0.3.72",
+    "@langchain/openai": "^0.6.9",
     "@mdi/font": "^7.4.47",
     "@vueuse/core": "^13.2.0",
     "fs": "^0.0.1-security",
+    "langchain": "^0.3.31",
     "motion-v": "^1.1.0-alpha.1",
     "nuxt": "^4.0.2",
+    "redis": "^5.8.2",
+    "uuid": "^11.1.0",
     "vue": "^3.5.13",
     "vue-router": "^4.5.1",
     "vue3-toastify": "^0.2.8"

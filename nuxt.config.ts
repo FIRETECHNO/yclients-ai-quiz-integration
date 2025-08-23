@@ -53,6 +53,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     yclUserToken: process.env.YCL_USER_TOKEN,
     yclPartnerToken: process.env.YCL_PARTNER_TOKEN,
+    gigachatAuthKey: process.env.GIGACHAT_AUTH_KEY,
     public: {
       apiBase: '',
     }
