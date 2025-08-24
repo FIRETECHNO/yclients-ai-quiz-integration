@@ -11,3 +11,12 @@ defineProps<{ message: IMessage }>();
     </v-card>
   </div>
 </template>
+<style>
+.text-card {
+  max-width: 75%;
+  max-height: 600px;
+  width: fit-content;
+  height: fit-content;
+  overflow: auto;
+}
+</style>
