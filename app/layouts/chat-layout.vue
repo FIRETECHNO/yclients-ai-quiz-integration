@@ -16,5 +16,6 @@ useHead({
 .chat-container {
   height: 100vh;
   overflow-y: hidden;
+  background-color: #212121;
 }
 </style>
