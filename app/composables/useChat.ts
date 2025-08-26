@@ -18,11 +18,18 @@ export function useChat() {
     chatStatus.value = "ai-thinking";
   }
 
+  async function getAIMessage(answer: string, payload: Record<string, any>) {
+    let messageFromAI = new Message(answer, payload, true, -1);
+    //?
+    messages.value.push(messageFromAI); // insert a new message
+    chatStatus.value = "ready";
+  }
   return {
     // variables
     messages,
     chatStatus,
     // functions
     sendMessage,
+    getAIMessage,
   };
 }

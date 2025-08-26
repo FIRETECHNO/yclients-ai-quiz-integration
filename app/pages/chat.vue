@@ -1,14 +1,14 @@
 <script setup lang="ts">
 definePageMeta({
-  layout: "chat-layout"
-})
+  layout: "chat-layout",
+});
 
 const chatStore = useChat();
 let { messages } = chatStore;
 
-
 async function processSubmit(question: string) {
   await chatStore.sendMessage(question);
+  await chatStore.getAIMessage(question, {}); //For test
 }
 
 async function testReq() {
@@ -27,7 +27,6 @@ async function testReq() {
     <v-row class="d-flex justify-center align-center fill-height">
       <v-col cols="12" md="8" xl="6" class="fill-height">
         <v-sheet class="d-flex flex-column fill-height rounded-lg elevation-2" color="#121212">
-
           <!-- Сообщения -->
           <v-card-text class="flex-grow-1 overflow-y-auto">
             <div v-for="(msg, index) of messages" :key="index" class="mb-2">
