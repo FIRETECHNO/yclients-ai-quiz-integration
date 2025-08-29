@@ -23,7 +23,7 @@ export interface GigaChatChatModelInput extends BaseChatModelParams {
 }
 
 export class GigaChatChatModel extends SimpleChatModel {
-  modelName = "GigaChat-Pro";
+  modelName = "GigaChat-Lite";
   apiKey: string;
   temperature = 0.2;
   max_tokens: number | undefined;
