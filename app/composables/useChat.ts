@@ -9,7 +9,7 @@ export function useChat() {
     let messageOnClient = new Message(question, {}, false, user.value?.id);
 
     try {
-      const success = await ChatApi.serverSendMessage(messageOnClient);
+      // const success = await ChatApi.sendMessage(messageOnClient);
     } catch (error) {
       console.error("Failed to send message to the server", error);
     }
@@ -18,7 +18,7 @@ export function useChat() {
     chatStatus.value = "ai-thinking";
   }
 
-  async function getAIMessage(answer: string, payload: Record<string, any>) {
+  async function setAiMessage(answer: string, payload: Record<string, any>) {
     let messageFromAI = new Message(answer, payload, true, -1);
     //?
     messages.value.push(messageFromAI); // insert a new message
@@ -30,6 +30,6 @@ export function useChat() {
     chatStatus,
     // functions
     sendMessage,
-    getAIMessage,
+    setAiMessage,
   };
 }

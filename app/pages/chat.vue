@@ -8,7 +8,7 @@ let { messages } = chatStore;
 
 async function processSubmit(question: string) {
   await chatStore.sendMessage(question);
-  await chatStore.getAIMessage(question, {}); //For test
+  await chatStore.setAiMessage(question, {}); //For test
 }
 
 async function testReq() {
