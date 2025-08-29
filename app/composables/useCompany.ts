@@ -1,7 +1,8 @@
 import CompanyApi from "../api/CompanyApi";
 
 export function useCompany() {
-  let companyId = useState<number | null>(); // id текущей компании
+  let companyId = useState<number | null>(() => 125616); // id текущей компании
+
   async function updateCompanyId(): Promise<boolean> {
     // Проверяем, что companyId не null перед отправкой
     if (companyId.value === null) {
@@ -10,8 +11,9 @@ export function useCompany() {
     }
 
     try {
-      const success = await CompanyApi.serverUpdateCompanyId(companyId.value);
-      return success.success;
+      const data = await CompanyApi.serverUpdateCompanyId(companyId.value);
+
+      return true;
     } catch (error) {
       console.error("Failed to update company ID:", error);
       return false;

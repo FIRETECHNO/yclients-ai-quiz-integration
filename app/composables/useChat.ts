@@ -1,3 +1,4 @@
+import { toast } from "vue3-toastify";
 import ChatApi from "~/api/ChatApi";
 
 export function useChat() {
@@ -5,17 +6,29 @@ export function useChat() {
   let chatStatus = useState<"ready" | "ai-thinking">("ready");
 
   async function sendMessage(question: string) {
+    if (question.length == 0) return;
+
     const { user } = useUser();
+    const { companyId } = useCompany();
+
+    if (!companyId.value) throw new Error("Не выбрана компания!")
+
     let messageOnClient = new Message(question, {}, false, user.value?.id);
+    messages.value.push(messageOnClient)
 
     try {
-      // const success = await ChatApi.sendMessage(messageOnClient);
-    } catch (error) {
-      console.error("Failed to send message to the server", error);
+      chatStatus.value = "ai-thinking";
+      let data = await ChatApi.askAi(messageOnClient, companyId.value);
+      await setAiMessage(data.output, {})
+
+      return data;
+    } catch (error: any) {
+      chatStatus.value = "ready";
+      return toast(error.message, {
+        type: "error"
+      })
     }
 
-    messages.value.push(messageOnClient); // insert a new message
-    chatStatus.value = "ai-thinking";
   }
 
   async function setAiMessage(answer: string, payload: Record<string, any>) {

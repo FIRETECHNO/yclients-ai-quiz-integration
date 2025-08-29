@@ -8,18 +8,6 @@ let { messages } = chatStore;
 
 async function processSubmit(question: string) {
   await chatStore.sendMessage(question);
-  await chatStore.setAiMessage(question, {}); //For test
-}
-
-async function testReq() {
-  const { output } = await $fetch<any>("/api/gigachat/chat", {
-    method: "POST",
-    body: {
-      messages: [{ role: "user", content: "Привет! Что можешь?" }],
-    },
-  });
-
-  console.log(output);
 }
 </script>
 <template>
@@ -38,7 +26,6 @@ async function testReq() {
           <!-- Поле ввода -->
           <v-divider></v-divider>
           <v-card-actions>
-            <v-btn @click="testReq">test req</v-btn>
             <ChatInput @send-message="processSubmit" class="w-100" />
           </v-card-actions>
         </v-sheet>

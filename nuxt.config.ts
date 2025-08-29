@@ -54,6 +54,7 @@ export default defineNuxtConfig({
     yclUserToken: process.env.YCL_USER_TOKEN,
     yclPartnerToken: process.env.YCL_PARTNER_TOKEN,
     gigachatAuthKey: process.env.GIGACHAT_AUTH_KEY,
+    redisUrl: process.env.REDIS_URL,
     public: {
       apiBase: '',
     }

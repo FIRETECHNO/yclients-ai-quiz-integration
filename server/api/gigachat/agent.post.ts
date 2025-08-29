@@ -1,0 +1,92 @@
+import { GigaChatChatModel } from "../../utils/gigachatLLM";
+import { getGigaToken } from "../../utils/gigachatAccessToken";
+import { useRedis } from "../../utils/redis";
+import { BaseMessage } from "@langchain/core/messages";
+import type { MessageContent } from "@langchain/core/messages";
+
+// Максимальное количество сообщений в истории (20 пар вопрос-ответ)
+const MAX_HISTORY_LENGTH = 40;
+
+// Функция для генерации "личности" агента на основе данных о компании
+function createSystemPrompt(company: any): string {
+  const services = company.services.map((s: any) => `- ${s.name} (${s.price})`).join("\n");
+  return `Ты — вежливый и полезный ИИ-ассистент компании "${company.name}".
+Твоя задача — консультировать клиентов, помогать с выбором услуг. Ты не можешь никого никуда записать - только подсказать, какие услуги релевантны.
+Никогда не выдумывай услуги, цены или акции. Используй только информацию ниже.
+
+ИНФОРМАЦИЯ О КОМПАНИИ:
+- Название: ${company.name}
+- Адрес: ${company.address}
+- Часы работы: ${company.workingHours}
+- Специальные предложения: ${company.specialOffers}
+
+НАШИ УСЛУГИ:
+${services}
+
+Всегда отвечай дружелюбно и по делу, основываясь на этой информации. Только об услугах говори.`;
+}
+
+// Определяем типы для удобства
+type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
+
+export default defineEventHandler(async (event) => {
+  // 1. Изменяем входящие параметры
+  const { companyId, userId, message } = await readBody<{
+    companyId: string;
+    userId: string;
+    message: string;
+  }>(event);
+
+  if (!companyId || !userId || !message) {
+    throw createError({ statusCode: 400, message: "companyId, userId, и message обязательны" });
+  }
+
+  const redis = await useRedis();
+  const companyKey = `company:${companyId}`;
+  const chatKey = `chat:${companyId}:${userId}`;
+
+  // 2. Получаем данные о компании и историю чата из Redis
+  const [companyDataString, chatHistoryStrings] = await Promise.all([
+    redis.get(companyKey),
+    redis.lRange(chatKey, 0, -1)
+  ]);
+
+  if (!companyDataString) {
+    throw createError({ statusCode: 404, message: `Компания с ID "${companyId}" не найдена` });
+  }
+
+  const companyData = JSON.parse(companyDataString);
+  const userMessage: ChatMessage = { role: "user", content: message };
+
+  // 3. Собираем полный контекст для LLM
+  const systemPrompt = createSystemPrompt(companyData);
+  const chatHistory: ChatMessage[] = chatHistoryStrings.map(msg => JSON.parse(msg));
+
+  const messagesForLlm: ChatMessage[] = [
+    { role: "system", content: systemPrompt },
+    ...chatHistory,
+    userMessage
+  ];
+
+  // 4. Вызываем GigaChat (ваша логика остается почти такой же)
+  const accessToken = await getGigaToken();
+  const llm = new GigaChatChatModel({
+    apiKey: accessToken,
+    modelName: "GigaChat-Pro",
+    temperature: 0.3,
+  });
+
+  const result = await llm.invoke(messagesForLlm as any); // as any для упрощения, т.к. llm ожидает BaseMessage
+  const aiResponse: ChatMessage = { role: 'assistant', content: result.content as string };
+
+  // 5. Сохраняем новый диалог (вопрос и ответ) в Redis
+  await Promise.all([
+    redis.rPush(chatKey, JSON.stringify(userMessage)),
+    redis.rPush(chatKey, JSON.stringify(aiResponse))
+  ]);
+
+  // 6. Обрезаем историю, если она стала слишком длинной
+  await redis.lTrim(chatKey, -MAX_HISTORY_LENGTH, -1);
+
+  return { output: aiResponse.content };
+});

@@ -6,6 +6,7 @@ let { chatStatus } = useChat();
 
 function submit() {
   emit("send-message", question.value)
+  question.value = ""
 }
 </script>
 <template>
