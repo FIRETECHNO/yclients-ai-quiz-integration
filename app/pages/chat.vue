@@ -4,25 +4,36 @@ definePageMeta({
 });
 
 const chatStore = useChat();
-let { messages } = chatStore;
+let { messages, isLoadingHistory, fetchHistory } = chatStore;
 
 async function processSubmit(question: string) {
   await chatStore.sendMessage(question);
 }
+onMounted(() => {
+  fetchHistory();
+});
 </script>
 <template>
   <v-container fluid class="fill-height">
     <v-row class="d-flex justify-center align-center fill-height">
       <v-col cols="12" md="8" xl="6" class="fill-height">
-        <v-sheet class="d-flex flex-column justify-center fill-height rounded-lg elevation-0" color="#121212">
+        <v-sheet
+          class="d-flex flex-column justify-center fill-height rounded-lg elevation-0"
+          color="#121212"
+        >
           <!-- Сообщения -->
-          <v-card-text v-if="messages.length > 0" class="flex-grow-1 overflow-y-auto">
-            <div v-for="(msg, index) of messages" :key="index" class="mb-2">
-              <ChatMessageIncoming v-if="msg.isIncoming" :message="msg" />
-              <ChatMessageOutgoing v-else :message="msg" />
-            </div>
-          </v-card-text>
-
+          <div v-if="isLoadingHistory">Загрузка истории...</div>
+          <div v-else>
+            <v-card-text
+              v-if="messages.length > 0"
+              class="flex-grow-1 overflow-y-auto"
+            >
+              <div v-for="(msg, index) of messages" :key="index" class="mb-2">
+                <ChatMessageIncoming v-if="msg.isIncoming" :message="msg" />
+                <ChatMessageOutgoing v-else :message="msg" />
+              </div>
+            </v-card-text>
+          </div>
           <!-- Поле ввода -->
           <v-card-actions>
             <ChatInput @send-message="processSubmit" class="w-100" />
