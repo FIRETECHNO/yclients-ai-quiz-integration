@@ -1,3 +1,4 @@
+import { ChatInput } from "#components";
 import { toast } from "vue3-toastify";
 import ChatApi from "~/api/ChatApi";
 
@@ -13,43 +14,19 @@ export function useChat() {
 
     // Получаем необходимые ID из других composables.
     // .value нужен, чтобы получить само значение из ref-переменной.
-    const { companyId } = useCompany();
-    const { user } = useUser(); // Предположим, что useUser возвращает ID пользователя
-
-    // Проверяем, есть ли у нас все данные для запроса.
-    // Если нет, то и запрашивать нечего.
-    if (!companyId.value || !user.value.id) {
-      console.warn(
-        "Недостаточно данных для запроса истории (companyId или userId)."
-      );
-      return;
-    }
 
     // Ставим флаг загрузки в true. В этот момент на UI можно показать лоадер.
     isLoadingHistory.value = true;
-
     try {
-      // Это встроенный в Nuxt 3 способ делать запросы к API. Он очень удобный.
-      // Мы делаем GET-запрос на /api/messages и передаем параметры в поле `query`.
-      const history = await $fetch<IMessage[]>("/api/messages", {
-        method: "GET",
-        query: {
-          companyId: companyId.value,
-          userId: user,
-        },
-      });
+      const history = await ChatApi.getHistory();
+      console.log(history);
 
-      // Если запрос прошел успешно, мы полностью заменяем наш массив `messages`
-      // теми данными, что пришли с сервера.
-      messages.value = history;
-      console.log(`История успешно загружена. Сообщений: ${history.length}`);
+      // Для ref используем .value
+      messages.value = history || []; // Обрабатываем undefined
     } catch (error) {
-      // Если произошла ошибка (например, сервер недоступен), мы выводим ее в консоль.
-      // В реальном приложении здесь можно было бы показать пользователю уведомление об ошибке.
-      console.error("Ошибка при загрузке истории сообщений:", error);
+      console.error("Ошибка загрузки истории:", error);
+      messages.value = [];
     } finally {
-      // Этот блок выполнится в любом случае: и при успехе, и при ошибке.
-      // Мы убираем флаг загрузки. Лоадер на UI можно скрывать.
       isLoadingHistory.value = false;
     }
   };
@@ -62,7 +39,13 @@ export function useChat() {
 
     if (!companyId.value) throw new Error("Не выбрана компания!");
 
-    let messageOnClient = new Message(question, {}, false, user.value?.id);
+    let messageOnClient = new Message(
+      "user",
+      question,
+      {},
+      false,
+      user.value?.id
+    );
     messages.value.push(messageOnClient);
 
     try {
@@ -80,7 +63,7 @@ export function useChat() {
   }
 
   async function setAiMessage(answer: string, payload: Record<string, any>) {
-    let messageFromAI = new Message(answer, payload, true, -1);
+    let messageFromAI = new Message("assistant", answer, payload, true, -1);
     //?
     messages.value.push(messageFromAI); // insert a new message
     chatStatus.value = "ready";

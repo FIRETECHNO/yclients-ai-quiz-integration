@@ -1,22 +1,25 @@
 class Message implements IMessage {
-  _id?: string
-  stringContent: string
-  payload: Record<string, any>
-  author?: number | -1
-  isIncoming: boolean
+  role: string;
+  _id?: string;
+  content: string;
+  payload: Record<string, any>;
+  author?: number | -1;
+  isIncoming: boolean;
 
   constructor(
-    stringContent: string,
+    role: string,
+    content: string,
     payload: Record<string, any> = {},
     isIncoming: boolean,
     author?: number | -1,
-    _id?: string,
+    _id?: string
   ) {
-    this._id = _id
-    this.stringContent = stringContent
-    this.payload = payload
-    this.author = author
-    this.isIncoming = isIncoming
+    this.role = role;
+    this._id = _id;
+    this.content = content;
+    this.payload = payload;
+    this.author = author;
+    this.isIncoming = isIncoming;
   }
 
   toString(): string {
@@ -25,13 +28,14 @@ class Message implements IMessage {
 
   toJSON() {
     return {
+      role: this.role,
       id: this._id,
-      content: this.stringContent,
+      content: this.content,
       payload: this.payload,
       author: this.author,
       isIncoming: this.isIncoming,
-    }
+    };
   }
 }
 
-export { Message }
+export { Message };

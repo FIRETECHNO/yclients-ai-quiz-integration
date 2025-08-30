@@ -3,13 +3,16 @@ import { getGigaToken } from "../../utils/gigachatAccessToken";
 import { useRedis } from "../../utils/redis";
 import { BaseMessage } from "@langchain/core/messages";
 import type { MessageContent } from "@langchain/core/messages";
+import { Message } from "~/utils/message";
 
 // Максимальное количество сообщений в истории (20 пар вопрос-ответ)
 const MAX_HISTORY_LENGTH = 40;
 
 // Функция для генерации "личности" агента на основе данных о компании
 function createSystemPrompt(company: any): string {
-  const services = company.services.map((s: any) => `- ${s.name} (${s.price})`).join("\n");
+  const services = company.services
+    .map((s: any) => `- ${s.name} (${s.price})`)
+    .join("\n");
   return `Ты — вежливый и полезный ИИ-ассистент компании "${company.name}".
 Твоя задача — консультировать клиентов, помогать с выбором услуг. Ты не можешь никого никуда записать - только подсказать, какие услуги релевантны.
 Никогда не выдумывай услуги, цены или акции. Используй только информацию ниже.
@@ -38,7 +41,10 @@ export default defineEventHandler(async (event) => {
   }>(event);
 
   if (!companyId || !userId || !message) {
-    throw createError({ statusCode: 400, message: "companyId, userId, и message обязательны" });
+    throw createError({
+      statusCode: 400,
+      message: "companyId, userId, и message обязательны",
+    });
   }
 
   const redis = await useRedis();
@@ -48,11 +54,14 @@ export default defineEventHandler(async (event) => {
   // 2. Получаем данные о компании и историю чата из Redis
   const [companyDataString, chatHistoryStrings] = await Promise.all([
     redis.get(companyKey),
-    redis.lRange(chatKey, 0, -1)
+    redis.lRange(chatKey, 0, -1),
   ]);
 
   if (!companyDataString) {
-    throw createError({ statusCode: 404, message: `Компания с ID "${companyId}" не найдена` });
+    throw createError({
+      statusCode: 404,
+      message: `Компания с ID "${companyId}" не найдена`,
+    });
   }
 
   const companyData = JSON.parse(companyDataString);
@@ -60,12 +69,15 @@ export default defineEventHandler(async (event) => {
 
   // 3. Собираем полный контекст для LLM
   const systemPrompt = createSystemPrompt(companyData);
-  const chatHistory: ChatMessage[] = chatHistoryStrings.map(msg => JSON.parse(msg));
-
+  const chatHistory: ChatMessage[] = chatHistoryStrings.map((msg) => {
+    const message = JSON.parse(msg) as IMessage;
+    return { role: message.role, content: message.content } as ChatMessage;
+  });
+  console.log(chatHistory);
   const messagesForLlm: ChatMessage[] = [
     { role: "system", content: systemPrompt },
     ...chatHistory,
-    userMessage
+    userMessage,
   ];
 
   // 4. Вызываем GigaChat (ваша логика остается почти такой же)
@@ -77,12 +89,37 @@ export default defineEventHandler(async (event) => {
   });
 
   const result = await llm.invoke(messagesForLlm as any); // as any для упрощения, т.к. llm ожидает BaseMessage
-  const aiResponse: ChatMessage = { role: 'assistant', content: result.content as string };
+  const aiResponse: ChatMessage = {
+    role: "assistant",
+    content: result.content as string,
+  };
 
   // 5. Сохраняем новый диалог (вопрос и ответ) в Redis
   await Promise.all([
-    redis.rPush(chatKey, JSON.stringify(userMessage)),
-    redis.rPush(chatKey, JSON.stringify(aiResponse))
+    redis.rPush(
+      chatKey,
+      JSON.stringify(
+        new Message(
+          userMessage.role,
+          userMessage.content,
+          {},
+          false,
+          Number(userId)
+        )
+      )
+    ),
+    redis.rPush(
+      chatKey,
+      JSON.stringify(
+        new Message(
+          aiResponse.role,
+          aiResponse.content,
+          {},
+          true,
+          Number(userId)
+        )
+      )
+    ),
   ]);
 
   // 6. Обрезаем историю, если она стала слишком длинной
