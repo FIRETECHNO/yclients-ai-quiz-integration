@@ -16,7 +16,7 @@
     "@langchain/core": "^0.3.72",
     "@langchain/openai": "^0.6.9",
     "@mdi/font": "^7.4.47",
-    "@vueuse/core": "^13.2.0",
+    "@vueuse/core": "^13.8.0",
     "fs": "^0.0.1-security",
     "langchain": "^0.3.31",
     "motion-v": "^1.1.0-alpha.1",
