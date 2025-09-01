@@ -19,10 +19,21 @@ export function useCompany() {
       return false;
     }
   }
+
+  async function connectNewCompany(company_id: number) {
+    const data = await $fetch("/api/yclients/connect-new-company", {
+      method: "POST",
+      body: {
+        company_id
+      }
+    })
+  }
+
   return {
     // variables
     companyId,
     // functions
     updateCompanyId,
+    connectNewCompany
   };
 }
