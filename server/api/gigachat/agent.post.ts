@@ -120,7 +120,7 @@ export default defineEventHandler(async (event) => {
     console.warn(
       "GigaChat вернул не-JSON ответ. Используем как простой текст."
     );
-    answerText = resultContent;
+    answerText = resultContent.split("{")[0];
   }
   const aiResponse: ChatMessage = {
     role: "assistant",
