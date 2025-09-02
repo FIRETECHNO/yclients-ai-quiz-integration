@@ -53,10 +53,7 @@ export function useChat() {
       chatStatus.value = "ai-thinking";
       let data = await ChatApi.askAi(messageOnClient, companyId.value);
       await setAiMessage(data.output, {});
-
-      hints.value = (
-        await ChatApi.updateHints(user.value?.id, companyId.value)
-      ).output;
+      hints.value = data.hints;
       return data;
     } catch (error: any) {
       chatStatus.value = "ready";

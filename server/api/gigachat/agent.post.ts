@@ -13,7 +13,8 @@ function createSystemPrompt(company: any): string {
   const services = company.services
     .map((s: any) => `- ${s.name} (${s.price})`)
     .join("\n");
-  return `Ты — вежливый и полезный ИИ-ассистент компании "${company.name}".
+  return (
+    `Ты — вежливый и полезный ИИ-ассистент компании "${company.name}".
 Твоя задача — консультировать клиентов, помогать с выбором услуг. Ты не можешь никого никуда записать - только подсказать, какие услуги релевантны.
 Никогда не выдумывай услуги, цены или акции. Используй только информацию ниже.
 
@@ -26,7 +27,21 @@ function createSystemPrompt(company: any): string {
 НАШИ УСЛУГИ:
 ${services}
 
-Всегда отвечай дружелюбно и по делу, основываясь на этой информации. Только об услугах говори.`;
+Всегда отвечай дружелюбно и по делу, основываясь на этой информации. Только об услугах говори.` +
+    `Всегда генерируй 3 коротких и полезных вопроса-подсказки, которые пользователь мог бы задать следующими.
+
+Твой ответ ДОЛЖЕН БЫТЬ в формате JSON. Не пиши ничего, кроме JSON.
+
+Структура JSON должна быть следующей:
+{
+  "answer": "здесь твой основной текстовый ответ пользователю",
+  "suggestions": [
+    "здесь первая подсказка",
+    "здесь вторая подсказка",
+    "здесь третья подсказка"
+  ]
+}`
+  );
 }
 
 // Определяем типы для удобства
@@ -84,16 +99,33 @@ export default defineEventHandler(async (event) => {
   const accessToken = await getGigaToken();
   const llm = new GigaChatChatModel({
     apiKey: accessToken,
-    modelName: "GigaChat-Pro",
+    modelName: "GigaChat-Max",
     temperature: 0.3,
   });
 
   const result = await llm.invoke(messagesForLlm as any); // as any для упрощения, т.к. llm ожидает BaseMessage
+
+  const resultContent = result.content as string;
+  let answerText: string;
+  let suggestions: string[] = [];
+
+  try {
+    // Пытаемся распарсить ответ как JSON
+    const parsedResult = JSON.parse(resultContent);
+    answerText = parsedResult.answer;
+    suggestions = parsedResult.suggestions;
+  } catch (e) {
+    // Если нейросеть вернула не JSON, а простой текст (такое бывает),
+    // мы используем его как основной ответ, а подсказки оставляем пустыми.
+    console.warn(
+      "GigaChat вернул не-JSON ответ. Используем как простой текст."
+    );
+    answerText = resultContent;
+  }
   const aiResponse: ChatMessage = {
     role: "assistant",
-    content: result.content as string,
+    content: answerText,
   };
-
   // 5. Сохраняем новый диалог (вопрос и ответ) в Redis
   await Promise.all([
     redis.rPush(
@@ -125,5 +157,5 @@ export default defineEventHandler(async (event) => {
   // 6. Обрезаем историю, если она стала слишком длинной
   await redis.lTrim(chatKey, -MAX_HISTORY_LENGTH, -1);
 
-  return { output: aiResponse.content };
+  return { output: aiResponse.content, hints: suggestions };
 });
