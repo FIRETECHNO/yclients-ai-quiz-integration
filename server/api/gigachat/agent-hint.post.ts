@@ -13,6 +13,7 @@ function createSystemPrompt(company: any): string {
   const services = company.services
     .map((s: any) => `- ${s.name} (${s.price})`)
     .join("\n");
+
   return `Ты — вежливый и полезный ИИ-ассистент компании "${company.name}".
 Твоя задача — консультировать клиентов, помогать с выбором услуг. Ты не можешь никого никуда записать - только подсказать, какие услуги релевантны.
 Никогда не выдумывай услуги, цены или акции. Используй только информацию ниже.
@@ -33,14 +34,14 @@ ${services}
 type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
 
 export default defineEventHandler(async (event) => {
-  // 1. Изменяем входящие параметры
-  const { companyId, userId, message } = await readBody<{
+  //1. Изменяем входящие параметры
+  const { companyId, userId } = await readBody<{
     companyId: string;
     userId: string;
-    message: string;
   }>(event);
 
-  if (!companyId || !userId || !message) {
+  //console.log(companyId, userId);
+  if (!companyId || !userId) {
     throw createError({
       statusCode: 400,
       message: "companyId, userId, и message обязательны",
@@ -65,7 +66,6 @@ export default defineEventHandler(async (event) => {
   }
 
   const companyData = JSON.parse(companyDataString);
-  const userMessage: ChatMessage = { role: "user", content: message };
 
   // 3. Собираем полный контекст для LLM
   const systemPrompt = createSystemPrompt(companyData);
@@ -73,13 +73,33 @@ export default defineEventHandler(async (event) => {
     const message = JSON.parse(msg) as IMessage;
     return { role: message.role, content: message.content } as ChatMessage;
   });
-  //console.log(chatHistory);
+
+  const systemPromptTemplate = `
+    Всегда генерируй 3 коротких и полезных вопроса-подсказки, которые пользователь мог бы задать следующими.
+
+    Твой ответ ДОЛЖЕН БЫТЬ в формате JSON. Не пиши ничего, кроме JSON.
+
+    Структура JSON должна быть следующей:
+    {
+    "suggestions": [
+        "здесь первая подсказка",
+        "здесь вторая подсказка",
+        "здесь третья подсказка"
+    ]
+    }
+
+    История диалога у тебя есть
+  `;
+  const promptMessage: ChatMessage = {
+    role: "user",
+    content: systemPromptTemplate,
+  };
+  console.log(chatHistory);
   const messagesForLlm: ChatMessage[] = [
     { role: "system", content: systemPrompt },
     ...chatHistory,
-    userMessage,
+    promptMessage,
   ];
-
   // 4. Вызываем GigaChat (ваша логика остается почти такой же)
   const accessToken = await getGigaToken();
   const llm = new GigaChatChatModel({
@@ -89,41 +109,19 @@ export default defineEventHandler(async (event) => {
   });
 
   const result = await llm.invoke(messagesForLlm as any); // as any для упрощения, т.к. llm ожидает BaseMessage
-  const aiResponse: ChatMessage = {
-    role: "assistant",
-    content: result.content as string,
-  };
+  let suggestions: string[] = [];
 
-  // 5. Сохраняем новый диалог (вопрос и ответ) в Redis
-  await Promise.all([
-    redis.rPush(
-      chatKey,
-      JSON.stringify(
-        new Message(
-          userMessage.role,
-          userMessage.content,
-          {},
-          false,
-          Number(userId)
-        )
-      )
-    ),
-    redis.rPush(
-      chatKey,
-      JSON.stringify(
-        new Message(
-          aiResponse.role,
-          aiResponse.content,
-          {},
-          true,
-          Number(userId)
-        )
-      )
-    ),
-  ]);
-
-  // 6. Обрезаем историю, если она стала слишком длинной
-  await redis.lTrim(chatKey, -MAX_HISTORY_LENGTH, -1);
-
-  return { output: aiResponse.content };
+  try {
+    // Пытаемся распарсить ответ как JSON
+    const parsedResult = JSON.parse(result.content as string);
+    suggestions = parsedResult.suggestions;
+  } catch (e) {
+    // Если нейросеть вернула не JSON, а простой текст (такое бывает),
+    // мы используем его как основной ответ, а подсказки оставляем пустыми.
+    console.warn(
+      "GigaChat вернул не-JSON ответ. Используем как простой текст."
+    );
+  }
+  console.log(suggestions);
+  return { output: suggestions };
 });

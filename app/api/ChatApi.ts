@@ -26,6 +26,19 @@ export default {
 
     return data;
   },
+
+  async updateHints(userID: number, companyId: number) {
+    let toSend = {
+      userID,
+      companyId,
+    };
+    let data = await $fetch<{ output: string[] }>("/api/gigachat/agent-hint", {
+      method: "POST",
+      body: toSend,
+    });
+    return data;
+  },
+
   async getHistory() {
     const { companyId } = useCompany();
     const { user } = useUser(); // Предположим, что useUser возвращает ID пользователя

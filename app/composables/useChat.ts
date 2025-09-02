@@ -5,6 +5,7 @@ import ChatApi from "~/api/ChatApi";
 export function useChat() {
   let messages = useState<IMessage[]>(() => []);
   let chatStatus = useState<"ready" | "ai-thinking">("ready");
+  let hints = useState<string[]>(() => []);
   // Создаем ref для отслеживания состояния загрузки.
   // Это полезно, чтобы показывать пользователю спиннер или лоадер.
   const isLoadingHistory = ref(false);
@@ -53,6 +54,9 @@ export function useChat() {
       let data = await ChatApi.askAi(messageOnClient, companyId.value);
       await setAiMessage(data.output, {});
 
+      hints.value = (
+        await ChatApi.updateHints(user.value?.id, companyId.value)
+      ).output;
       return data;
     } catch (error: any) {
       chatStatus.value = "ready";
@@ -71,6 +75,7 @@ export function useChat() {
   return {
     // variables
     messages,
+    hints,
     chatStatus,
     isLoadingHistory,
     // functions
