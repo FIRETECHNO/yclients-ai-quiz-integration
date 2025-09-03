@@ -52,7 +52,10 @@ export function useChat() {
     try {
       chatStatus.value = "ai-thinking";
       let data = await ChatApi.askAi(messageOnClient, companyId.value);
-      await setAiMessage(data.output, {});
+      setAiMessage(data.output, {});
+
+      chatStatus.value = "ready";
+
       return data;
     } catch (error: any) {
       chatStatus.value = "ready";
@@ -70,7 +73,10 @@ export function useChat() {
       // companyId.value! возможно неправильно
       let data = await ChatApi.getHints(user.value.id, companyId.value!);
       hints.value = data.hints;
+
+      chatStatus.value = "ready";
     } catch (error: any) {
+      chatStatus.value = "ready";
       return toast(error.message, {
         type: "error",
       });
