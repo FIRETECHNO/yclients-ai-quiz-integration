@@ -9,7 +9,7 @@ export default {
   async askAi(
     message: IMessage,
     companyId: number
-  ): Promise<{ output: string; hints: string[] }> {
+  ): Promise<{ output: string }> {
     if (!message.author) throw new Error("No author of message");
 
     let toSend = {
@@ -29,6 +29,25 @@ export default {
     return data;
   },
 
+  async getHints(
+    userId: number,
+    companyId: number
+  ): Promise<{ hints: string[] }> {
+    let toSend = {
+      userId,
+      companyId,
+    };
+    console.log("--- Send message: ", toSend);
+
+    let data = await $fetch<{ output: string; hints: string[] }>(
+      "/api/gigachat/agent-hints",
+      {
+        method: "POST",
+        body: toSend,
+      }
+    );
+    return data;
+  },
   async getHistory() {
     const { companyId } = useCompany();
     const { user } = useUser(); // Предположим, что useUser возвращает ID пользователя

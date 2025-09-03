@@ -6,13 +6,14 @@ definePageMeta({
 import { useScroll } from "@vueuse/core";
 
 const chatStore = useChat();
-let { messages, hints, isLoadingHistory, fetchHistory } = chatStore;
+let { messages, hints, isLoadingHistory, fetchHistory, setHints } = chatStore;
 const messagesContainer = ref<HTMLElement | null>(null);
 
 let { y } = useScroll(messagesContainer);
 
 async function processSubmit(question: string) {
   await chatStore.sendMessage(question);
+  await setHints();
 }
 async function scrollToBottom() {
   if (messagesContainer.value) {
@@ -22,11 +23,12 @@ async function scrollToBottom() {
 
 onMounted(async () => {
   await fetchHistory();
+  await setHints();
   scrollToBottom();
 });
 
 function onHintClick(index: number) {
-  chatStore.sendMessage(hints.value[index]!);
+  processSubmit(hints.value[index]!);
 }
 watch(messages, scrollToBottom, { deep: true });
 </script>

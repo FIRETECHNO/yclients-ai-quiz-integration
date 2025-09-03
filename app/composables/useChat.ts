@@ -53,7 +53,6 @@ export function useChat() {
       chatStatus.value = "ai-thinking";
       let data = await ChatApi.askAi(messageOnClient, companyId.value);
       await setAiMessage(data.output, {});
-      hints.value = data.hints;
       return data;
     } catch (error: any) {
       chatStatus.value = "ready";
@@ -63,6 +62,20 @@ export function useChat() {
     }
   }
 
+  async function setHints() {
+    const { user } = useUser();
+    const { companyId } = useCompany();
+    try {
+      chatStatus.value = "ai-thinking";
+      // companyId.value! возможно неправильно
+      let data = await ChatApi.getHints(user.value.id, companyId.value!);
+      hints.value = data.hints;
+    } catch (error: any) {
+      return toast(error.message, {
+        type: "error",
+      });
+    }
+  }
   async function setAiMessage(answer: string, payload: Record<string, any>) {
     let messageFromAI = new Message("assistant", answer, payload, true, -1);
     //?
@@ -79,5 +92,6 @@ export function useChat() {
     sendMessage,
     setAiMessage,
     fetchHistory,
+    setHints,
   };
 }
