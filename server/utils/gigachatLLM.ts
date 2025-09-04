@@ -4,9 +4,7 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import { AIMessage, BaseMessage } from "@langchain/core/messages";
 
-function convertRole(
-  message: BaseMessage
-): "user" | "assistant" | "system" {
+function convertRole(message: BaseMessage): "user" | "assistant" | "system" {
   const type = message._getType();
   if (type === "human") return "user";
   if (type === "ai") return "assistant";
@@ -77,11 +75,20 @@ export class GigaChatChatModel extends SimpleChatModel {
     }).catch((error) => {
       const apiError = error.data || { message: error.message };
       console.error("GigaChat API Error Response:", apiError);
-      throw new Error(`GigaChat API request failed: ${apiError.message || 'Unknown error'}`);
+      throw new Error(
+        `GigaChat API request failed: ${apiError.message || "Unknown error"}`
+      );
     });
 
-    if (!data.choices || data.choices.length === 0 || !data.choices[0].message) {
-      console.warn("GigaChat API returned an unexpected response structure:", data);
+    if (
+      !data.choices ||
+      data.choices.length === 0 ||
+      !data.choices[0].message
+    ) {
+      console.warn(
+        "GigaChat API returned an unexpected response structure:",
+        data
+      );
       throw new Error("Received no valid choices from GigaChat API.");
     }
 

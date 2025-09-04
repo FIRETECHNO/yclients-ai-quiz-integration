@@ -1,4 +1,5 @@
 import { GigaChatChatModel } from "../../utils/gigachatLLM";
+import { getModel } from "../../utils/aiAgent";
 import { getGigaToken } from "../../utils/gigachatAccessToken";
 import { useRedis } from "../../utils/redis";
 import { BaseMessage } from "@langchain/core/messages";
@@ -90,13 +91,7 @@ export default defineEventHandler(async (event) => {
   ];
 
   // 4. Вызываем GigaChat (ваша логика остается почти такой же)
-  const accessToken = await getGigaToken();
-  const llm = new GigaChatChatModel({
-    apiKey: accessToken,
-    modelName: "GigaChat-Max",
-    temperature: 0.3,
-  });
-
+  const llm = await getModel();
   const result = await llm.invoke(messagesForLlm as any); // as any для упрощения, т.к. llm ожидает BaseMessage
 
   const resultContent = result.content as string;
