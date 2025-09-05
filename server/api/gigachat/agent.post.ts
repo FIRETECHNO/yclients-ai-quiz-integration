@@ -3,7 +3,7 @@ import { getModel } from "../../utils/aiAgent";
 import { getGigaToken } from "../../utils/gigachatAccessToken";
 import { useRedis } from "../../utils/redis";
 import { BaseMessage } from "@langchain/core/messages";
-import type { MessageContent } from "@langchain/core/messages";
+import type { AIMessageChunk, MessageContent } from "@langchain/core/messages";
 import { Message } from "~/utils/message";
 
 // Максимальное количество сообщений в истории (20 пар вопрос-ответ)
@@ -81,9 +81,34 @@ export default defineEventHandler(async (event) => {
 
   // 4. Вызываем GigaChat (ваша логика остается почти такой же)
   const llm = await getModel();
-  const result = await llm.invoke(messagesForLlm as any); // as any для упрощения, т.к. llm ожидает BaseMessage
+  // as any для упрощения, т.к. llm ожидает BaseMessage
+  let result: AIMessageChunk;
+  try {
+    result = await llm.invoke(messagesForLlm as any);
+  } catch (error) {
+    if (error instanceof Error) {
+      // Проверяем сообщение об ошибке
+      if (
+        error.message.includes("401") ||
+        error.message.includes("Unauthorized")
+      ) {
+        updateToken();
+        result = await llm.invoke(messagesForLlm as any);
+      } else {
+        console.log(error.message);
+      }
+    } else if (typeof error === "object" && error !== null) {
+      // Проверяем объект ошибки на наличие статуса
+      if ("status" in error && error.status === 401) {
+        updateToken();
+        result = await llm.invoke(messagesForLlm as any);
+      } else {
+        console.log(error);
+      }
+    }
+  }
 
-  const resultContent = result.content as string;
+  const resultContent = result!.content as string;
   // let answerText: string;
   // let suggestions: string[] = [];
 

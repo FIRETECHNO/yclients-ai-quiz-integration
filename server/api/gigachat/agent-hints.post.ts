@@ -1,5 +1,5 @@
 import { GigaChatChatModel } from "../../utils/gigachatLLM";
-import { getModel } from "../../utils/aiAgent";
+import { getModel, updateToken } from "../../utils/aiAgent";
 import { getGigaToken } from "../../utils/gigachatAccessToken";
 import { useRedis } from "../../utils/redis";
 import { BaseMessage } from "@langchain/core/messages";
@@ -92,8 +92,11 @@ export default defineEventHandler(async (event) => {
 
   // 4. Вызываем GigaChat (ваша логика остается почти такой же)
   const llm = await getModel();
-  const result = await llm.invoke(messagesForLlm as any); // as any для упрощения, т.к. llm ожидает BaseMessage
-
+  let result = await llm.invoke(messagesForLlm as any); // as any для упрощения, т.к. llm ожидает BaseMessage
+  if (result.response_metadata.statusCode == 401) {
+    updateToken();
+    result = await llm.invoke(messagesForLlm as any);
+  }
   const resultContent = result.content as string;
   let suggestions: string[] = [];
   try {
@@ -106,6 +109,11 @@ export default defineEventHandler(async (event) => {
     console.warn(
       "GigaChat вернул не-JSON ответ. Используем как простой текст."
     );
+    suggestions = [
+      "Записаться на мужскую стрижку",
+      "Какая прическа подойдет мне?",
+      "Побрить бороду",
+    ];
   }
 
   return { hints: suggestions };
