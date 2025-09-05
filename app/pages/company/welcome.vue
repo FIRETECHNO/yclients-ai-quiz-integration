@@ -7,6 +7,9 @@
           <v-card-title class="text-h4 text-wrap font-weight-bold my-4">
             Добро пожаловать в я хз как называется!
           </v-card-title>
+          <v-icon size="200" color="green" class="my-4">
+            mdi-check-circle
+          </v-icon>
 
           <v-card-text class="text-medium-emphasis">
             Ваш персональный AI-ассистент готов помочь вам с записью, ответить
