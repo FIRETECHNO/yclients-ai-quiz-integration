@@ -39,14 +39,16 @@ export default {
     };
     console.log("--- Send message: ", toSend);
 
-    let data = await $fetch<{ output: string; hints: string[] }>(
-      "/api/gigachat/agent-hints",
-      {
-        method: "POST",
-        body: toSend,
-      }
-    );
-    return data;
+    // let data = await $fetch<{ output: string; hints: string[] }>(
+    //   "/api/gigachat/agent-hints",
+    //   {
+    //     method: "POST",
+    //     body: toSend,
+    //   }
+    // );
+
+    // return data;
+    return { hints: ["Записаться на мужскую стрижку", "Какая прическа подойдет мне?", "Побрить бороду"] }
   },
   async getHistory() {
     const { companyId } = useCompany();
