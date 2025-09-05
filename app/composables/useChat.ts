@@ -5,6 +5,7 @@ import ChatApi from "~/api/ChatApi";
 export function useChat() {
   let messages = useState<IMessage[]>(() => []);
   let chatStatus = useState<"ready" | "ai-thinking">("ready");
+  let hints = useState<string[]>(() => []);
   // Создаем ref для отслеживания состояния загрузки.
   // Это полезно, чтобы показывать пользователю спиннер или лоадер.
   const isLoadingHistory = ref(false);
@@ -51,7 +52,9 @@ export function useChat() {
     try {
       chatStatus.value = "ai-thinking";
       let data = await ChatApi.askAi(messageOnClient, companyId.value);
-      await setAiMessage(data.output, {});
+      setAiMessage(data.output, {});
+
+      chatStatus.value = "ready";
 
       return data;
     } catch (error: any) {
@@ -62,6 +65,23 @@ export function useChat() {
     }
   }
 
+  async function setHints() {
+    const { user } = useUser();
+    const { companyId } = useCompany();
+    try {
+      chatStatus.value = "ai-thinking";
+      // companyId.value! возможно неправильно
+      let data = await ChatApi.getHints(user.value.id, companyId.value!);
+      hints.value = data.hints;
+
+      chatStatus.value = "ready";
+    } catch (error: any) {
+      chatStatus.value = "ready";
+      return toast(error.message, {
+        type: "error",
+      });
+    }
+  }
   async function setAiMessage(answer: string, payload: Record<string, any>) {
     let messageFromAI = new Message("assistant", answer, payload, true, -1);
     //?
@@ -71,11 +91,13 @@ export function useChat() {
   return {
     // variables
     messages,
+    hints,
     chatStatus,
     isLoadingHistory,
     // functions
     sendMessage,
     setAiMessage,
     fetchHistory,
+    setHints,
   };
 }

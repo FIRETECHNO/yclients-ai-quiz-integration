@@ -19,12 +19,36 @@ export default {
     };
     console.log("--- Send message: ", toSend);
 
-    let data = await $fetch<{ output: string }>("/api/gigachat/agent", {
-      method: "POST",
-      body: toSend,
-    });
-
+    let data = await $fetch<{ output: string; hints: string[] }>(
+      "/api/gigachat/agent",
+      {
+        method: "POST",
+        body: toSend,
+      }
+    );
     return data;
+  },
+
+  async getHints(
+    userId: number,
+    companyId: number
+  ): Promise<{ hints: string[] }> {
+    let toSend = {
+      userId,
+      companyId,
+    };
+    console.log("--- Send message: ", toSend);
+
+    // let data = await $fetch<{ output: string; hints: string[] }>(
+    //   "/api/gigachat/agent-hints",
+    //   {
+    //     method: "POST",
+    //     body: toSend,
+    //   }
+    // );
+
+    // return data;
+    return { hints: ["Записаться на мужскую стрижку", "Какая прическа подойдет мне?", "Побрить бороду"] }
   },
   async getHistory() {
     const { companyId } = useCompany();
