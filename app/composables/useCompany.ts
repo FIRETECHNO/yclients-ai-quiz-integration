@@ -1,7 +1,7 @@
 import CompanyApi from "../api/CompanyApi";
 
 export function useCompany() {
-  let companyId = useState<number | null>(() => 1434780); // id текущей компании
+  let companyId = useState<number | null>(() => 125616); // id текущей компании
 
   async function ensureCompanyIsConnected(): Promise<boolean> {
     // Проверяем, что companyId не null перед отправкой
@@ -14,7 +14,6 @@ export function useCompany() {
 
     return response.success;
   }
-
 
   return {
     // variables

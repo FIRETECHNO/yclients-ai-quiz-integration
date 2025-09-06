@@ -2,6 +2,8 @@ import { GigaChatChatModel } from "../../utils/gigachatLLM";
 import { getModel } from "../../utils/aiAgent";
 import { getGigaToken } from "../../utils/gigachatAccessToken";
 import { useRedis } from "../../utils/redis";
+import { useServices } from "../../utils/services";
+import array from "../../utils/seeds/services";
 import { BaseMessage } from "@langchain/core/messages";
 import type { AIMessageChunk, MessageContent } from "@langchain/core/messages";
 import { Message } from "~/utils/message";
@@ -66,6 +68,7 @@ export default defineEventHandler(async (event) => {
   const companyData = JSON.parse(companyDataString);
   const userMessage: ChatMessage = { role: "user", content: message };
 
+  console.log(useServices.extractData(array));
   // 3. Собираем полный контекст для LLM
   const systemPrompt = createSystemPrompt(companyData);
   const chatHistory: ChatMessage[] = chatHistoryStrings.map((msg) => {
