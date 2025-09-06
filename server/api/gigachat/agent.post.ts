@@ -82,7 +82,7 @@ export default defineEventHandler(async (event) => {
   // 4. Вызываем GigaChat (ваша логика остается почти такой же)
   const llm = await getModel();
   // as any для упрощения, т.к. llm ожидает BaseMessage
-  let result: AIMessageChunk;
+  let result: AIMessageChunk | null = null;
   try {
     result = await llm.invoke(messagesForLlm as any);
   } catch (error) {
@@ -90,9 +90,12 @@ export default defineEventHandler(async (event) => {
       // Проверяем сообщение об ошибке
       if (
         error.message.includes("401") ||
-        error.message.includes("Unauthorized")
+        error.message.includes("Unauthorized") ||
+        error.message.includes("Token has expired")
       ) {
-        updateToken();
+        console.log("Token has been updated");
+        const token = await updateToken();
+        llm.apiKey = token;
         result = await llm.invoke(messagesForLlm as any);
       } else {
         console.log(error.message);
@@ -100,14 +103,16 @@ export default defineEventHandler(async (event) => {
     } else if (typeof error === "object" && error !== null) {
       // Проверяем объект ошибки на наличие статуса
       if ("status" in error && error.status === 401) {
-        updateToken();
+        console.log("Token has been updated");
+        const token = await updateToken();
+        llm.apiKey = token;
         result = await llm.invoke(messagesForLlm as any);
       } else {
         console.log(error);
       }
     }
   }
-
+  if (!result) console.error("Something went wrong with the AI's response");
   const resultContent = result!.content as string;
   // let answerText: string;
   // let suggestions: string[] = [];

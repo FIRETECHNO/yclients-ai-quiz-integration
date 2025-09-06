@@ -23,6 +23,7 @@ export async function updateToken() {
       temperature: 0.3,
     });
   } else {
-    agent.apiKey = accessToken;
+    agent.apiKey = accessToken;    
   }
+  return accessToken;
 }
