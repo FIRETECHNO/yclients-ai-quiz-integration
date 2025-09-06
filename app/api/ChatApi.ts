@@ -37,7 +37,6 @@ export default {
       userId,
       companyId,
     };
-    console.log("--- Send message: ", toSend);
 
     // let data = await $fetch<{ output: string; hints: string[] }>(
     //   "/api/gigachat/agent-hints",
