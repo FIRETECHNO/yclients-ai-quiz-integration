@@ -9,5 +9,10 @@ export default {
     });
   },
 
-  // другие функции через запятую
+  ensureCompanyIsConnected(companyId: number): Promise<{ data: any, success: boolean, meta: any }> {
+    const { $apiFetch } = useNuxtApp();
+    return $apiFetch<{ data: any, success: boolean, meta: any }>(`/company/get-by-id?company_id=${companyId}`, {
+      method: "GET",
+    });
+  }
 }

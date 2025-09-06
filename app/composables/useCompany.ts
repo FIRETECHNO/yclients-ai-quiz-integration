@@ -1,39 +1,25 @@
 import CompanyApi from "../api/CompanyApi";
 
 export function useCompany() {
-  let companyId = useState<number | null>(() => 125616); // id текущей компании
+  let companyId = useState<number | null>(() => 1434780); // id текущей компании
 
-  async function updateCompanyId(): Promise<boolean> {
+  async function ensureCompanyIsConnected(): Promise<boolean> {
     // Проверяем, что companyId не null перед отправкой
     if (companyId.value === null) {
       console.error("Company ID is null");
       return false;
     }
 
-    try {
-      const data = await CompanyApi.serverUpdateCompanyId(companyId.value);
+    const response = await CompanyApi.ensureCompanyIsConnected(companyId.value);
 
-      return true;
-    } catch (error) {
-      console.error("Failed to update company ID:", error);
-      return false;
-    }
+    return response.success;
   }
 
-  async function connectNewCompany(company_id: number) {
-    const data = await $fetch("/api/yclients/connect-new-company", {
-      method: "POST",
-      body: {
-        company_id
-      }
-    })
-  }
 
   return {
     // variables
     companyId,
     // functions
-    updateCompanyId,
-    connectNewCompany
+    ensureCompanyIsConnected,
   };
 }
