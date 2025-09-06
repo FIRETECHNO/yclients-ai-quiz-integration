@@ -13,3 +13,17 @@ export async function getModel() {
   }
   return agent;
 }
+export async function updateToken() {
+  const accessToken = await getGigaToken();
+  if (!agent) {
+    const accessToken = await getGigaToken();
+    agent = new GigaChatChatModel({
+      apiKey: accessToken,
+      modelName: "GigaChat-Max",
+      temperature: 0.3,
+    });
+  } else {
+    agent.apiKey = accessToken;    
+  }
+  return accessToken;
+}

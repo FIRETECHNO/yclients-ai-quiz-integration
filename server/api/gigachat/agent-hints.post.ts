@@ -1,9 +1,9 @@
 import { GigaChatChatModel } from "../../utils/gigachatLLM";
-import { getModel } from "../../utils/aiAgent";
+import { getModel, updateToken } from "../../utils/aiAgent";
 import { getGigaToken } from "../../utils/gigachatAccessToken";
 import { useRedis } from "../../utils/redis";
 import { BaseMessage } from "@langchain/core/messages";
-import type { MessageContent } from "@langchain/core/messages";
+import type { AIMessageChunk, MessageContent } from "@langchain/core/messages";
 import { Message } from "~/utils/message";
 
 // Максимальное количество сообщений в истории (20 пар вопрос-ответ)
@@ -92,9 +92,41 @@ export default defineEventHandler(async (event) => {
 
   // 4. Вызываем GigaChat (ваша логика остается почти такой же)
   const llm = await getModel();
-  const result = await llm.invoke(messagesForLlm as any); // as any для упрощения, т.к. llm ожидает BaseMessage
-
-  const resultContent = result.content as string;
+  let result: AIMessageChunk | null = null;
+  try {
+    result = await llm.invoke(messagesForLlm as any);
+  } catch (error) {
+    if (error instanceof Error) {
+      // Проверяем сообщение об ошибке
+      if (
+        error.message.includes("401") ||
+        error.message.includes("Unauthorized") ||
+        error.message.includes("Token has expired")
+      ) {
+        console.log("Token has been updated");
+        const token = await updateToken();
+        llm.apiKey = token;
+        result = await llm.invoke(messagesForLlm as any);
+      } else {
+        console.log(error.message);
+      }
+    } else if (typeof error === "object" && error !== null) {
+      // Проверяем объект ошибки на наличие статуса
+      if ("status" in error && error.status === 401) {
+        console.log("Token has been updated");
+        const token = await updateToken();
+        llm.apiKey = token;
+        result = await llm.invoke(messagesForLlm as any);
+      } else {
+        console.log(error);
+      }
+    }
+  }
+  if (!result)
+    console.error(
+      "Something went wrong with the AI's response (hints request)"
+    );
+  const resultContent = result!.content as string;
   let suggestions: string[] = [];
   try {
     // Пытаемся распарсить ответ как JSON
@@ -106,6 +138,11 @@ export default defineEventHandler(async (event) => {
     console.warn(
       "GigaChat вернул не-JSON ответ. Используем как простой текст."
     );
+    suggestions = [
+      "Записаться на мужскую стрижку",
+      "Какая прическа подойдет мне?",
+      "Побрить бороду",
+    ];
   }
 
   return { hints: suggestions };
