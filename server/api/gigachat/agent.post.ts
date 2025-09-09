@@ -13,9 +13,8 @@ const MAX_HISTORY_LENGTH = 40;
 
 // Функция для генерации "личности" агента на основе данных о компании
 function createSystemPrompt(company: any): string {
-  const services = company.services
-    .map((s: any) => `- ${s.name} (${s.price})`)
-    .join("\n");
+  const { prompt } = useServices.extractData(array);
+
   return `Ты — вежливый и полезный ИИ-ассистент компании "${company.name}".
 Твоя задача — консультировать клиентов, помогать с выбором услуг. Ты не можешь никого никуда записать - только подсказать, какие услуги релевантны.
 Никогда не выдумывай услуги, цены или акции. Используй только информацию ниже.
@@ -27,7 +26,18 @@ function createSystemPrompt(company: any): string {
 - Специальные предложения: ${company.specialOffers}
 
 НАШИ УСЛУГИ:
-${services}`;
+${prompt}
+
+
+Твой ответ ДОЛЖЕН БЫТЬ в формате JSON. Не пиши ничего, кроме JSON.
+
+Структура JSON должна быть следующей:
+{
+  "answer" : "здесь ответ пользователю"
+  "services": [
+    "здесь здесь идет массив id услуг которые подойдут пользователю",
+  ]
+}`;
 }
 
 // Определяем типы для удобства
@@ -68,7 +78,6 @@ export default defineEventHandler(async (event) => {
   const companyData = JSON.parse(companyDataString);
   const userMessage: ChatMessage = { role: "user", content: message };
 
-  console.log(useServices.extractData(array));
   // 3. Собираем полный контекст для LLM
   const systemPrompt = createSystemPrompt(companyData);
   const chatHistory: ChatMessage[] = chatHistoryStrings.map((msg) => {
@@ -116,7 +125,15 @@ export default defineEventHandler(async (event) => {
     }
   }
   if (!result) console.error("Something went wrong with the AI's response");
-  const resultContent = result!.content as string;
+
+  //const resultContent = result!.content as string;
+  const resultContent = `{
+  "answer" : "здесь ответ пользователю",
+  "services": [
+    12321323123
+  ]
+}`;
+
   // let answerText: string;
   // let suggestions: string[] = [];
 
@@ -133,9 +150,25 @@ export default defineEventHandler(async (event) => {
   //   );
   //   answerText = resultContent.split("{")[0];
   // }
+  let answer = "";
+  let services: string[] = [];
+  try {
+    // Пытаемся распарсить ответ как JSON
+    const parsedResult = JSON.parse(resultContent);
+    answer = parsedResult.answer;
+    console.log(parsedResult.services);
+    services = parsedResult.services;
+  } catch (e) {
+    // Если нейросеть вернула не JSON, а простой текст (такое бывает),
+    // мы используем его как основной ответ, а подсказки оставляем пустыми.
+    console.warn(
+      "GigaChat вернул не-JSON ответ. Используем как простой текст."
+    );
+    answer = resultContent;
+  }
   const aiResponse: ChatMessage = {
     role: "assistant",
-    content: resultContent,
+    content: answer,
   };
   // 5. Сохраняем новый диалог (вопрос и ответ) в Redis
   await Promise.all([
@@ -157,7 +190,7 @@ export default defineEventHandler(async (event) => {
         new Message(
           aiResponse.role,
           aiResponse.content,
-          {},
+          { recommended_services: services },
           true,
           Number(userId)
         )

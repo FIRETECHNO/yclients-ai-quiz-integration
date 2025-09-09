@@ -7,7 +7,7 @@ export async function getModel() {
     const accessToken = await getGigaToken();
     agent = new GigaChatChatModel({
       apiKey: accessToken,
-      modelName: "GigaChat-Max",
+      modelName: "GigaChat-Pro",
       temperature: 0.3,
     });
   }
@@ -23,7 +23,7 @@ export async function updateToken() {
       temperature: 0.3,
     });
   } else {
-    agent.apiKey = accessToken;    
+    agent.apiKey = accessToken;
   }
   return accessToken;
 }

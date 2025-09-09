@@ -9,7 +9,6 @@ type Service = {
   CompanyId: number;
   isChain: boolean;
   id: number;
-  salonServiceId: number;
   title: string;
   categoryId: number;
   priceMin: number;
@@ -23,22 +22,25 @@ type Service = {
 };
 
 function extractData(data: any[]) {
-  const result: Service[] = [];
+  const resultServices: Service[] = [];
+  let resultString: string = "Услуги :\n";
   data.forEach((element) => {
     let staff: Staff[] = [];
+    let staffString: string = "Мастера:\n ";
     element.staff.forEach((el: any) => {
       staff.push({
         id: el.id,
         imageUrl: el.image_url,
         name: el.name,
       } as Staff);
+      staffString += `${el.name}, `;
     });
+    staffString += "\n";
     const elem: Service = {
       serviceName: element.booking_title,
       CompanyId: element.salon_service_id,
       isChain: element.is_chain,
       id: element.id,
-      salonServiceId: element.salon_service_id,
       title: element.title,
       categoryId: element.category_id,
       priceMin: element.price_min,
@@ -50,9 +52,17 @@ function extractData(data: any[]) {
       staff: staff,
       duration: element.duration,
     };
-    result.push(elem);
+
+    resultString += `Услуга* ${elem.serviceName}
+    Id услуги: ${elem.id}
+    Максимальная цена: ${elem.priceMax}
+    Комментарий к услуге: ${elem.comment}
+    Длительность услуги: ${elem.duration} секунд
+    ${staffString}*`;
+    resultServices.push(elem);
   });
-  return result;
+
+  return { array: resultServices, prompt: resultString };
 }
 
 export const useServices = { extractData };
