@@ -13,7 +13,7 @@ const MAX_HISTORY_LENGTH = 40;
 
 // Функция для генерации "личности" агента на основе данных о компании
 function createSystemPrompt(company: any): string {
-  //const { prompt } = useServices.extractData(array);
+  const { prompt } = useServices.extractData(array);
 
   return `Ты — вежливый и полезный ИИ-ассистент компании "${company.name}".
 Твоя задача — консультировать клиентов, помогать с выбором услуг. Ты не можешь никого никуда записать - только подсказать, какие услуги релевантны.
@@ -25,11 +25,17 @@ function createSystemPrompt(company: any): string {
 - Часы работы: ${company.workingHours}
 - Специальные предложения: ${company.specialOffers}
 
+НАШИ УСЛУГИ:
+${prompt}
+
+
 Твой ответ ДОЛЖЕН БЫТЬ в формате JSON. Не пиши ничего, кроме JSON.
 
 Структура JSON должна быть следующей:
 {
-  "answer" : "здесь ответ пользователю"
+  "services": [
+    "здесь здесь идет массив id услуг которые подойдут пользователю",
+  ]
 }`;
 }
 
@@ -38,13 +44,12 @@ type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
 
 export default defineEventHandler(async (event) => {
   // 1. Изменяем входящие параметры
-  const { companyId, userId, message } = await readBody<{
+  const { companyId, userId } = await readBody<{
     companyId: string;
     userId: string;
-    message: string;
   }>(event);
 
-  if (!companyId || !userId || !message) {
+  if (!companyId || !userId) {
     throw createError({
       statusCode: 400,
       message: "companyId, userId, и message обязательны",
@@ -67,9 +72,13 @@ export default defineEventHandler(async (event) => {
       message: `Компания с ID "${companyId}" не найдена`,
     });
   }
-
+  const countServices: number = 50;
   const companyData = JSON.parse(companyDataString);
-  const userMessage: ChatMessage = { role: "user", content: message };
+  const userMessage: ChatMessage = {
+    role: "user",
+    content:
+      "Выйдай несколько услуг для пользователя не больше " + countServices,
+  };
 
   // 3. Собираем полный контекст для LLM
   const systemPrompt = createSystemPrompt(companyData);
@@ -89,7 +98,11 @@ export default defineEventHandler(async (event) => {
   // as any для упрощения, т.к. llm ожидает BaseMessage
   let result: AIMessageChunk | null = null;
   let resultContent = `{
-  "answer" : "здесь ответ пользователю"  
+  "services": [
+    12321323123,
+    23324324234,
+    324234
+  ]
 }`;
   try {
     //result = await llm.invoke(messagesForLlm as any);
@@ -121,8 +134,10 @@ export default defineEventHandler(async (event) => {
     }
   }
   if (result) resultContent = result!.content as string;
-  else console.error("Something went wrong with the AI's response");
-
+  else
+    console.error(
+      "Something went wrong with the AI's response (services request)"
+    );
   let answer = "";
   let services: string[] = [];
   try {
@@ -137,11 +152,9 @@ export default defineEventHandler(async (event) => {
     console.warn(
       "GigaChat вернул не-JSON ответ. Используем как простой текст."
     );
+
+    //Нужно нормально обработать
     answer = resultContent;
   }
-  const aiResponse: ChatMessage = {
-    role: "assistant",
-    content: answer,
-  };
-  return { output: aiResponse.content };
+  return { recommended_services: services };
 });

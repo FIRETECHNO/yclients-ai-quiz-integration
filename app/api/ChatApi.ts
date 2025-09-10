@@ -28,6 +28,37 @@ export default {
     );
     return data;
   },
+  async saveMessage(message: IMessage, companyId: number, userId: number) {
+    let toSend = {
+      message,
+      userId,
+      companyId,
+    };
+    console.log("--- Send message: ", toSend);
+
+    await $fetch("/api/redis/save-message", {
+      method: "POST",
+      body: toSend,
+    });
+  },
+  async getServices(
+    userId: number,
+    companyId: number
+  ): Promise<{ recommended_services: number[] } | null> {
+    let toSend = {
+      userId,
+      companyId,
+    };
+
+    let data = await $fetch<{ recommended_services: number[] }>(
+      "/api/gigachat/agent-recommended-services",
+      {
+        method: "POST",
+        body: toSend,
+      }
+    );
+    return data;
+  },
 
   async getHints(
     userId: number,
@@ -38,22 +69,15 @@ export default {
       companyId,
     };
 
-    // let data = await $fetch<{ output: string; hints: string[] }>(
-    //   "/api/gigachat/agent-hints",
-    //   {
-    //     method: "POST",
-    //     body: toSend,
-    //   }
-    // );
+    let data = await $fetch<{ output: string; hints: string[] }>(
+      "/api/gigachat/agent-hints",
+      {
+        method: "POST",
+        body: toSend,
+      }
+    );
 
-    // return data;
-    return {
-      hints: [
-        "Записаться на мужскую стрижку",
-        "Какая прическа подойдет мне?",
-        "Побрить бороду",
-      ],
-    };
+    return data;
   },
   async getHistory() {
     const { companyId } = useCompany();
@@ -70,7 +94,7 @@ export default {
     try {
       // Это встроенный в Nuxt 3 способ делать запросы к API. Он очень удобный.
       // Мы делаем GET-запрос на /api/messages и передаем параметры в поле `query`.
-      const history = await $fetch<IMessage[]>("/api/gigachat/history", {
+      const history = await $fetch<IMessage[]>("/api/redis/history", {
         method: "GET",
         query: {
           companyId: companyId.value,

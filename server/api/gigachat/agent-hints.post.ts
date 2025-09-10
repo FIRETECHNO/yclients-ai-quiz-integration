@@ -73,7 +73,7 @@ export default defineEventHandler(async (event) => {
     "здесь вторая подсказка",
     "здесь третья подсказка"
   ]
-}`;
+};`;
   const companyData = JSON.parse(companyDataString);
   const userMessage: ChatMessage = { role: "user", content: prompt };
 
@@ -93,8 +93,15 @@ export default defineEventHandler(async (event) => {
   // 4. Вызываем GigaChat (ваша логика остается почти такой же)
   const llm = await getModel();
   let result: AIMessageChunk | null = null;
+  let resultContent = `{
+  "suggestions": [
+    "Записаться на мужскую стрижку",
+      "Какая прическа подойдет мне?",
+      "Побрить бороду",
+  ]
+};`;
   try {
-    result = await llm.invoke(messagesForLlm as any);
+    //result = await llm.invoke(messagesForLlm as any);
   } catch (error) {
     if (error instanceof Error) {
       // Проверяем сообщение об ошибке
@@ -122,11 +129,13 @@ export default defineEventHandler(async (event) => {
       }
     }
   }
-  if (!result)
+
+  if (result) resultContent = result!.content as string;
+  else
     console.error(
       "Something went wrong with the AI's response (hints request)"
     );
-  const resultContent = result!.content as string;
+
   let suggestions: string[] = [];
   try {
     // Пытаемся распарсить ответ как JSON
