@@ -1,5 +1,9 @@
 <script setup lang="ts">
 defineProps<{ message: IMessage }>();
+
+function onHintClick(message: IMessage, index: number) {
+  console.log(message.payload.recommended_services[index]);
+}
 </script>
 
 <template>
@@ -8,6 +12,19 @@ defineProps<{ message: IMessage }>();
       <v-card-text style="overflow-wrap: anywhere">
         {{ message.content }}
       </v-card-text>
+      <v-chip
+        v-for="(service, index) of message.payload.recommended_services"
+        :key="index"
+        size="x-large"
+        @click="onHintClick(message, index)"
+        class="mr-2 mb-2"
+        color="green"
+        outlined
+        small
+        clickable
+      >
+        {{ service }}
+      </v-chip>
     </v-card>
   </div>
 </template>

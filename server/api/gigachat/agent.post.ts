@@ -95,6 +95,14 @@ export default defineEventHandler(async (event) => {
   const llm = await getModel();
   // as any для упрощения, т.к. llm ожидает BaseMessage
   let result: AIMessageChunk | null = null;
+  let resultContent = `{
+  "answer" : "здесь ответ пользователю",
+  "services": [
+    12321323123,
+    23324324234,
+    324234
+  ]
+}`;
   try {
     result = await llm.invoke(messagesForLlm as any);
   } catch (error) {
@@ -126,13 +134,7 @@ export default defineEventHandler(async (event) => {
   }
   if (!result) console.error("Something went wrong with the AI's response");
 
-  //const resultContent = result!.content as string;
-  const resultContent = `{
-  "answer" : "здесь ответ пользователю",
-  "services": [
-    12321323123
-  ]
-}`;
+  resultContent = result!.content as string;
 
   // let answerText: string;
   // let suggestions: string[] = [];
@@ -201,5 +203,5 @@ export default defineEventHandler(async (event) => {
   // 6. Обрезаем историю, если она стала слишком длинной
   await redis.lTrim(chatKey, -MAX_HISTORY_LENGTH, -1);
 
-  return { output: aiResponse.content };
+  return { output: aiResponse.content, recommended_services: services };
 });

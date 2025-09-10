@@ -9,7 +9,7 @@ export default {
   async askAi(
     message: IMessage,
     companyId: number
-  ): Promise<{ output: string }> {
+  ): Promise<{ output: string; recommended_services: number[] }> {
     if (!message.author) throw new Error("No author of message");
 
     let toSend = {
@@ -19,7 +19,7 @@ export default {
     };
     console.log("--- Send message: ", toSend);
 
-    let data = await $fetch<{ output: string; hints: string[] }>(
+    let data = await $fetch<{ output: string; recommended_services: number[] }>(
       "/api/gigachat/agent",
       {
         method: "POST",

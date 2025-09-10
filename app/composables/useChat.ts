@@ -52,7 +52,9 @@ export function useChat() {
     try {
       chatStatus.value = "ai-thinking";
       let data = await ChatApi.askAi(messageOnClient, companyId.value);
-      setAiMessage(data.output, {});
+      setAiMessage(data.output, {
+        recommended_services: data.recommended_services,
+      });
 
       chatStatus.value = "ready";
 
@@ -82,7 +84,7 @@ export function useChat() {
       });
     }
   }
-  async function setAiMessage(answer: string, payload: Record<string, any>) {
+  async function setAiMessage(answer: string, payload: any) {
     let messageFromAI = new Message("assistant", answer, payload, true, -1);
     //?
     messages.value.push(messageFromAI); // insert a new message
