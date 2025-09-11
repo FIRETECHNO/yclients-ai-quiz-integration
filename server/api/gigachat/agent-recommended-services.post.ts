@@ -56,7 +56,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const redis = await useRedis();
+  const redis = await useRedis.getRedisClient();
   const companyKey = `company:${companyId}`;
   const chatKey = `chat:${companyId}:${userId}`;
 
@@ -99,9 +99,9 @@ export default defineEventHandler(async (event) => {
   let result: AIMessageChunk | null = null;
   let resultContent = `{
   "services": [
-    12321323123,
-    23324324234,
-    324234
+    19946138,
+    18947154,
+    18951218
   ]
 }`;
   try {

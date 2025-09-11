@@ -51,7 +51,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const redis = await useRedis();
+  const redis = await useRedis.getRedisClient();
   const companyKey = `company:${companyId}`;
   const chatKey = `chat:${companyId}:${userId}`;
 

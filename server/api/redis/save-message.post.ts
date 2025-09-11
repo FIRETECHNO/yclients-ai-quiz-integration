@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const redis = await useRedis();
+  const redis = await useRedis.getRedisClient();
   const companyKey = `company:${companyId}`;
   const chatKey = `chat:${companyId}:${userId}`;
 
@@ -32,12 +32,13 @@ export default defineEventHandler(async (event) => {
       statusCode: 404,
       message: `Компания с ID "${companyId}" не найдена`,
     });
-  }  
+  }
   // 5. Сохраняем новый диалог (вопрос и ответ) в Redis
   await Promise.all([
     redis.rPush(
       chatKey,
-      JSON.stringify(message
+      JSON.stringify(
+        message
         // new Message(
         //   userMessage.role,
         //   userMessage.content,

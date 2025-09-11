@@ -3,13 +3,18 @@ declare global {
     role: string;
     _id?: string;
     content: string;
-    payload: Record<string, any>;
+    payload: IPayload;
     author?: number | -1;
     isIncoming: boolean;
 
     toJSON(): Record<string, any>;
     toString(): string;
   }
+
+  interface IPayload {
+    recommended_services: number[];
+    services: any[];
+  }
 }
 
-export { IMessage };
+export { IMessage, IPayload };

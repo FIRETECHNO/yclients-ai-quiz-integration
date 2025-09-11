@@ -41,7 +41,7 @@ export default {
       body: toSend,
     });
   },
-  async getServices(
+  async getIdServices(
     userId: number,
     companyId: number
   ): Promise<{ recommended_services: number[] } | null> {
@@ -57,9 +57,40 @@ export default {
         body: toSend,
       }
     );
+
     return data;
   },
+  async getServicesById(recommended_services: number[]): Promise<any[]> {
+    // 1. Создаем массив ПРОМИСОВ.
+    // .map() идеально подходит, потому что он создает новый массив.
+    // Каждый вызов $fetch - это обещание (промис), что данные когда-нибудь придут.
+    const promises = recommended_services.map((element) => {
+      const toSend = {
+        serviceId: element,
+      };
+      // Мы не используем await здесь, мы просто возвращаем сам промис
+      return $fetch<any>("/api/redis/get-service", {
+        method: "POST",
+        body: toSend,
+      });
+    });
 
+    // 2. Ждем, пока ВСЕ промисы в массиве не выполнятся.
+    // Promise.all - это специальная команда, которая говорит:
+    // "Дождись выполнения всех этих обещаний и верни мне массив с результатами".
+    const results = await Promise.all(promises);
+    return results;
+  },
+  async getServiceById(recommended_service: number): Promise<any[]> {
+    const toSend = {
+      serviceId: recommended_service,
+    };
+    const result = await $fetch<any>("/api/redis/get-service", {
+      method: "POST",
+      body: toSend,
+    });
+    return result;
+  },
   async getHints(
     userId: number,
     companyId: number

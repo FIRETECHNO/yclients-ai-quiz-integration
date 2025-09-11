@@ -13,7 +13,7 @@ export default defineEventHandler(async (event): Promise<IMessage[]> => {
       statusMessage: "Ошибка: ID компании и ID пользователя обязательны",
     });
   }
-  const redis = await useRedis();
+  const redis = await useRedis.getRedisClient();
   const redisKey = `chat:${companyId}:${userId}`;
 
   try {

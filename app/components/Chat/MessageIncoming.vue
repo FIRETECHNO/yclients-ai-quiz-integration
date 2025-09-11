@@ -1,6 +1,6 @@
 <script setup lang="ts">
 defineProps<{ message: IMessage }>();
-
+const chatStore = useChat();
 function onHintClick(message: IMessage, index: number) {
   console.log(message.payload.recommended_services[index]);
 }
@@ -13,7 +13,7 @@ function onHintClick(message: IMessage, index: number) {
         {{ message.content }}
       </v-card-text>
       <v-chip
-        v-for="(service, index) of message.payload.recommended_services"
+        v-for="(service, index) of message.payload.services"
         :key="index"
         size="x-large"
         @click="onHintClick(message, index)"
@@ -23,7 +23,7 @@ function onHintClick(message: IMessage, index: number) {
         small
         clickable
       >
-        {{ service }}
+        {{ service.serviceName }}
       </v-chip>
     </v-card>
   </div>

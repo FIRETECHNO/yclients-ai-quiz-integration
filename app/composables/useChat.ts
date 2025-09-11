@@ -19,11 +19,59 @@ export function useChat() {
     // Ставим флаг загрузки в true. В этот момент на UI можно показать лоадер.
     isLoadingHistory.value = true;
     try {
-      const history = await ChatApi.getHistory();
-      console.log(history);
+      let initialHistory = await ChatApi.getHistory();
 
-      // Для ref используем .value
-      messages.value = history || []; // Обрабатываем undefined
+      // Проверяем, что история вообще есть
+      if (!initialHistory || initialHistory.length === 0) {
+        console.log("История пуста, обновлять нечего.");
+        messages.value = []; // Очищаем сообщения на всякий случай
+        return; // Выходим из функции
+      }
+
+      console.log(
+        `Получена история из ${initialHistory.length} сообщений. Обогащаем данными...`
+      );
+
+      // 1. Создаем массив ПРОМИСОВ.
+      // Мы проходимся по каждому сообщению в истории и для каждого
+      // создаем "обещание" (промис) обогатить его данными.
+      const enrichedHistoryPromises = initialHistory.map(async (message) => {
+        // Проверяем, есть ли что обогащать
+        if (message.payload && message.payload.recommended_services) {
+          // Асинхронно получаем дополнительные данные (услуги)
+          const services = await ChatApi.getServicesById(
+            message.payload.recommended_services
+          );
+
+          // ВАЖНО: Мы возвращаем НОВЫЙ ОБЪЕКТ.
+          // Мы копируем все старые поля из `message` с помощью `...message`
+          // и добавляем/перезаписываем поле `payload` с новыми данными.
+          return new Message(
+            message.role,
+            message.content,
+            {
+              recommended_services: message.payload.recommended_services,
+              services: services,
+            },
+            message.isIncoming,
+            message.author,
+            message._id
+          );
+        }
+
+        // Если в сообщении нечего обогащать, просто возвращаем его как есть.
+        return message;
+      });
+
+      // 2. Ждем выполнения ВСЕХ промисов параллельно.
+      // Promise.all - это как сказать: "Запусти все эти задачи одновременно
+      // и дай мне знать, когда самая последняя из них будет выполнена".
+      const finalHistory = await Promise.all(enrichedHistoryPromises);
+      console.log(finalHistory);
+      // 3. Присваиваем наш НОВЫЙ, полностью готовый массив.
+      // Vue видит, что это совершенно новый массив (новая ссылка),
+      // и гарантированно перерисовывает компонент.
+      messages.value = finalHistory;
     } catch (error) {
       console.error("Ошибка загрузки истории:", error);
       messages.value = [];
@@ -43,7 +91,7 @@ export function useChat() {
     let messageOnClient = new Message(
       "user",
       question,
-      {},
+      { services: [], recommended_services: [] },
       false,
       user.value?.id
     );
@@ -52,7 +100,7 @@ export function useChat() {
     try {
       chatStatus.value = "ai-thinking";
       let data = await ChatApi.askAi(messageOnClient, companyId.value);
-      const recommended_services = await ChatApi.getServices(
+      const recommended_services = await ChatApi.getIdServices(
         user.value.id,
         companyId.value
       );
@@ -87,6 +135,9 @@ export function useChat() {
       });
     }
   }
+  async function getService(serviceId: number): Promise<any> {
+    return await ChatApi.getServiceById(serviceId);
+  }
   async function setAiMessage(answer: string, payload: any) {
     let messageFromAI = new Message("assistant", answer, payload, true, -1);
     //?
@@ -95,7 +146,9 @@ export function useChat() {
     if (!companyId.value) throw new Error("Не выбрана компания!");
 
     ChatApi.saveMessage(messageFromAI, companyId.value, user.value.id);
-
+    messageFromAI.payload.services = await ChatApi.getServicesById(
+      messageFromAI.payload.recommended_services
+    );
     messages.value.push(messageFromAI); // insert a new message
     chatStatus.value = "ready";
   }
@@ -110,5 +163,6 @@ export function useChat() {
     setAiMessage,
     fetchHistory,
     setHints,
+    getService,
   };
 }

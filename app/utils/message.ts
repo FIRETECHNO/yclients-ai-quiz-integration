@@ -2,14 +2,14 @@ class Message implements IMessage {
   role: string;
   _id?: string;
   content: string;
-  payload: Record<string, any>;
+  payload: IPayload;
   author?: number | -1;
   isIncoming: boolean;
 
   constructor(
     role: string,
     content: string,
-    payload: Record<string, any> = {},
+    payload: IPayload = { services: [], recommended_services: [] },
     isIncoming: boolean,
     author?: number | -1,
     _id?: string
