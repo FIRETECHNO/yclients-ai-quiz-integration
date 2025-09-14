@@ -83,7 +83,7 @@ export default defineEventHandler(async (event) => {
     const message = JSON.parse(msg) as IMessage;
     return { role: message.role, content: message.content } as ChatMessage;
   });
-  //console.log(chatHistory);
+  // console.log(chatHistory);
   const messagesForLlm: ChatMessage[] = [
     { role: "system", content: systemPrompt },
     ...chatHistory,
@@ -101,7 +101,7 @@ export default defineEventHandler(async (event) => {
   ]
 };`;
   try {
-    //result = await llm.invoke(messagesForLlm as any);
+    result = await llm.invoke(messagesForLlm as any);
   } catch (error) {
     if (error instanceof Error) {
       // Проверяем сообщение об ошибке
@@ -130,20 +130,20 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  if (result) resultContent = result!.content as string;
-  else
+  if (result) {
+    resultContent = result!.content as string;
+  }
+  else {
     console.error(
       "Something went wrong with the AI's response (hints request)"
     );
+  }
 
   let suggestions: string[] = [];
   try {
-    // Пытаемся распарсить ответ как JSON
     const parsedResult = JSON.parse(resultContent);
     suggestions = parsedResult.suggestions;
   } catch (e) {
-    // Если нейросеть вернула не JSON, а простой текст (такое бывает),
-    // мы используем его как основной ответ, а подсказки оставляем пустыми.
     console.warn(
       "GigaChat вернул не-JSON ответ. Используем как простой текст."
     );

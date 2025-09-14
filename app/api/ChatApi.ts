@@ -1,15 +1,8 @@
 export default {
-  // sendMessage(message: IMessage): Promise<{ success: boolean }> {
-  //   const { $apiFetch } = useNuxtApp();
-  //   return $apiFetch<{ success: boolean }>("/teacher/update-teacher-summary", {
-  //     method: "POST",
-  //     body: { message },
-  //   });
-  // },
   async askAi(
     message: IMessage,
     companyId: number
-  ): Promise<{ output: string; recommended_services: number[] }> {
+  ): Promise<{ output: string }> {
     if (!message.author) throw new Error("No author of message");
 
     let toSend = {
@@ -19,16 +12,17 @@ export default {
     };
     console.log("--- Send message: ", toSend);
 
-    let data = await $fetch<{ output: string; recommended_services: number[] }>(
+    let data = await $fetch<{ output: string }>(
       "/api/gigachat/agent",
       {
         method: "POST",
         body: toSend,
       }
     );
+
     return data;
   },
-  async saveMessage(message: IMessage, companyId: number, userId: number) {
+  async saveMessage(message: IMessage, companyId: number, userId: number): Promise<boolean> {
     let toSend = {
       message,
       userId,
@@ -36,10 +30,17 @@ export default {
     };
     console.log("--- Send message: ", toSend);
 
-    await $fetch("/api/redis/save-message", {
-      method: "POST",
-      body: toSend,
-    });
+    try {
+      await $fetch("/api/redis/save-message", {
+        method: "POST",
+        body: toSend,
+      });
+      return true;
+    } catch (error) {
+      console.log("error at save message", error);
+
+      return false;
+    }
   },
   async getIdServices(
     userId: number,
@@ -61,23 +62,16 @@ export default {
     return data;
   },
   async getServicesById(recommended_services: number[]): Promise<any[]> {
-    // 1. Создаем массив ПРОМИСОВ.
-    // .map() идеально подходит, потому что он создает новый массив.
-    // Каждый вызов $fetch - это обещание (промис), что данные когда-нибудь придут.
     const promises = recommended_services.map((element) => {
       const toSend = {
         serviceId: element,
       };
-      // Мы не используем await здесь, мы просто возвращаем сам промис
       return $fetch<any>("/api/redis/get-service", {
         method: "POST",
         body: toSend,
       });
     });
 
-    // 2. Ждем, пока ВСЕ промисы в массиве не выполнятся.
-    // Promise.all - это специальная команда, которая говорит:
-    // "Дождись выполнения всех этих обещаний и верни мне массив с результатами".
     const results = await Promise.all(promises);
     return results;
   },
@@ -112,10 +106,8 @@ export default {
   },
   async getHistory() {
     const { companyId } = useCompany();
-    const { user } = useUser(); // Предположим, что useUser возвращает ID пользователя
+    const { user } = useUser();
 
-    // Проверяем, есть ли у нас все данные для запроса.
-    // Если нет, то и запрашивать нечего.
     if (!companyId.value || !user.value.id) {
       console.warn(
         "Недостаточно данных для запроса истории (companyId или userId)."
@@ -123,8 +115,6 @@ export default {
       return;
     }
     try {
-      // Это встроенный в Nuxt 3 способ делать запросы к API. Он очень удобный.
-      // Мы делаем GET-запрос на /api/messages и передаем параметры в поле `query`.
       const history = await $fetch<IMessage[]>("/api/redis/history", {
         method: "GET",
         query: {
@@ -132,18 +122,11 @@ export default {
           userId: user.value.id,
         },
       });
-
-      // Если запрос прошел успешно, мы полностью заменяем наш массив `messages`
-      // теми данными, что пришли с сервера.
       console.log(`История успешно загружена. Сообщений: ${history.length}`);
       return history;
     } catch (error) {
-      // Если произошла ошибка (например, сервер недоступен), мы выводим ее в консоль.
-      // В реальном приложении здесь можно было бы показать пользователю уведомление об ошибке.
-
       console.error("Ошибка при загрузке истории сообщений:", error);
       return [];
     }
   },
-  // другие функции через запятую
 };
