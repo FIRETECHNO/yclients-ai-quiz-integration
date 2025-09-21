@@ -7,7 +7,6 @@ export function useChat() {
   let chatStatus = useState<"ready" | "ai-thinking">("ready");
   let hints = useState<string[]>(() => []);
 
-
   const isLoadingHistory = ref(false);
 
   async function fetchHistory() {
@@ -59,7 +58,7 @@ export function useChat() {
     } finally {
       isLoadingHistory.value = false;
     }
-  };
+  }
 
   async function sendMessage(question: string) {
     if (question.length == 0) return;
@@ -83,9 +82,8 @@ export function useChat() {
       chatStatus.value = "ai-thinking";
       let data = await ChatApi.askAi(messageOnClient, companyId.value);
       console.log("askAi result: ", data);
-
-      setAiMessage(data.output);
-
+      setAiMessage(data.output.answer);
+      hints.value = data.output.suggestions;
       chatStatus.value = "ready";
 
       return data;

@@ -13,7 +13,7 @@ let { y } = useScroll(messagesContainer);
 
 async function processSubmit(question: string) {
   await chatStore.sendMessage(question);
-  await chatStore.setHints();
+  //await chatStore.setHints();
 }
 async function scrollToBottom() {
   if (messagesContainer.value) {

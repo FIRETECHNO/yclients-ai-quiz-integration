@@ -2,7 +2,7 @@ export default {
   async askAi(
     message: IMessage,
     companyId: number
-  ): Promise<{ output: string }> {
+  ): Promise<{ output: { answer: string; suggestions: string[] } }> {
     if (!message.author) throw new Error("No author of message");
 
     let toSend = {
@@ -12,17 +12,23 @@ export default {
     };
     console.log("--- Send message: ", toSend);
 
-    let data = await $fetch<{ output: string }>(
-      "/api/gigachat/agent",
-      {
-        method: "POST",
-        body: toSend,
-      }
-    );
-
-    return data;
+    let data = await $fetch<{
+      output: { answer: string; suggestions: string[] } | string;
+    }>("/api/gigachat/agent", {
+      method: "POST",
+      body: toSend,
+    });
+    if (typeof data.output !== "object" || data === null) {
+      console.warn(`Ожидался объект, но получен: ${typeof data}`);
+      return { output: { answer: data.output as string, suggestions: [] } };
+    }
+    return { output: data.output as { answer: string; suggestions: string[] } };
   },
-  async saveMessage(message: IMessage, companyId: number, userId: number): Promise<boolean> {
+  async saveMessage(
+    message: IMessage,
+    companyId: number,
+    userId: number
+  ): Promise<boolean> {
     let toSend = {
       message,
       userId,

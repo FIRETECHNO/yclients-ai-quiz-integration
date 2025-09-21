@@ -15,7 +15,10 @@ export default defineEventHandler(async (event) => {
   }>(event);
 
   if (!companyId || !userId || !message) {
-    throw createError({ statusCode: 400, message: "companyId, userId и message обязательны" });
+    throw createError({
+      statusCode: 400,
+      message: "companyId, userId и message обязательны",
+    });
   }
 
   const redis = await useRedis.getRedisClient();
@@ -28,7 +31,10 @@ export default defineEventHandler(async (event) => {
   ]);
 
   if (!companyDataString) {
-    throw createError({ statusCode: 404, message: `Компания с ID "${companyId}" не найдена` });
+    throw createError({
+      statusCode: 404,
+      message: `Компания с ID "${companyId}" не найдена`,
+    });
   }
   const companyData = JSON.parse(companyDataString);
 
@@ -54,7 +60,9 @@ export default defineEventHandler(async (event) => {
           if (slots.length === 0) {
             return `Свободных слотов для услуги "${serviceName}" не найдено.`;
           }
-          return `Доступные слоты для "${serviceName}": ${JSON.stringify(slots)}`;
+          return `Доступные слоты для "${serviceName}": ${JSON.stringify(
+            slots
+          )}`;
         } catch (e) {
           return "Не удалось получить слоты. Возможно, услуга указана неверно.";
         }
@@ -72,15 +80,23 @@ export default defineEventHandler(async (event) => {
 
 Имена инструментов: {tool_names}
 
-Отвечай строго в формате JSON:
+**ВАЖНОЕ ПРАВИЛО ФОРМАТИРОВАНИЯ:**
+Когда ты готов дать финальный ответ пользователю, твой ответ ДОЛЖЕН БЫТЬ СТРОГО в формате JSON.
+Не пиши ничего, кроме валидного JSON.
+
+Структура JSON для финального ответа должна быть такой:
 {{
-  "action": "название инструмента или 'final_answer'",
-  "action_input": "аргументы или итоговый ответ"
+  "answer": "Твой текстовый ответ пользователю.",
+  "suggestions": [
+    // Здесь должны быть подсказки. Соблюдай следующие ПРАВИЛА:
+    // 1. Генерируй от 0 до 4 подсказок. Не больше четырех.
+    // 2. Добавляй подсказки, только если они ДЕЙСТВИТЕЛЬНО полезны и логически продолжают диалог.
+    // 3. Качество важнее количества. Лучше одна хорошая подсказка, чем три бесполезных.
+    // 4. Если диалог логически завершен (например, пользователь поблагодарил) или подходящих подсказок нет, верни пустой массив [].
+  ]
 }}
 
 Если нужен инструмент — выбери одно из имён инструментов из списка.
-Если знаешь финальный ответ без инструментов — используй "action": "final_answer".
-
 История диалога:
 {chat_history}
 
@@ -89,7 +105,7 @@ export default defineEventHandler(async (event) => {
 {agent_scratchpad}`;
 
   const prompt = PromptTemplate.fromTemplate(promptTemplate);
-
+  console.log(llm.modelName);
   const agent = await createStructuredChatAgent({
     llm,
     tools,
@@ -111,10 +127,11 @@ export default defineEventHandler(async (event) => {
 
     console.log(result);
 
-
     // Для Structured Chat Agent ответ приходит в result.output или напрямую в result
     finalAnswer =
-      typeof result.output === "string" ? result.output : JSON.stringify(result);
+      typeof result.output === "string"
+        ? result.output
+        : JSON.stringify(result);
   } catch (error: any) {
     console.error(error);
 
@@ -141,8 +158,7 @@ export default defineEventHandler(async (event) => {
     role: "assistant",
     author: -1,
     isIncoming: true,
-    content:
-      finalAnswer || "К сожалению, я не смог обработать ваш запрос.",
+    content: finalAnswer || "К сожалению, я не смог обработать ваш запрос.",
   };
 
   await Promise.all([
@@ -150,6 +166,5 @@ export default defineEventHandler(async (event) => {
     redis.rPush(chatKey, JSON.stringify(aiResponseToSave)),
   ]);
   await redis.lTrim(chatKey, -MAX_HISTORY_LENGTH, -1);
-
   return { output: finalAnswer };
 });
