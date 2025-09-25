@@ -23,6 +23,76 @@ async function scrollToBottom() {
 
 onMounted(async () => {
   await chatStore.fetchHistory();
+
+  chatStore.messages.value = [{
+    "role": "user", "content": "Привет", "author": 13373222, "isIncoming": false, payload: {
+      recommended_services: [],
+      services: []
+    },
+    toJSON: function a(): Record<string, string> {
+      return {}
+    }
+  },
+  {
+    "role": "assistant", "author": -1, "isIncoming": true, "content": "Привет! Как я могу тебе помочь?", payload: {
+      recommended_services: [],
+      services: []
+    },
+    toJSON: function a(): Record<string, string> {
+      return {}
+    }
+  },
+
+  {
+    "role": "user", "content": "привет", "author": 13373222, "isIncoming": false, payload: {
+      recommended_services: [],
+      services: []
+    },
+    toJSON: function a(): Record<string, string> {
+      return {}
+    }
+  }
+    ,
+  {
+    "role": "assistant", "author": -1, "isIncoming": true, "content": "Привет! Чем займёмся?", payload: {
+      recommended_services: [],
+      services: []
+    },
+    toJSON: function a(): Record<string, string> {
+      return {}
+    }
+  }
+    ,
+  {
+    "role": "user", "content": "Записи есть?", "author": 13373222, "isIncoming": false, payload: {
+      recommended_services: [],
+      services: []
+    },
+    toJSON: function a(): Record<string, string> {
+      return {}
+    }
+  }
+    ,
+  {
+    "role": "assistant", "author": -1, "isIncoming": true, "content": "Кажется, все слоты заняты. Давай попробуем немного позже.", payload: {
+      recommended_services: [],
+      services: []
+    },
+    toJSON: function a(): Record<string, string> {
+      return {}
+    }
+  }
+    ,
+  {
+    "role": "user", "content": "а в какой компании ты работаешь?", "author": 13373222, "isIncoming": false, payload: {
+      recommended_services: [],
+      services: []
+    },
+    toJSON: function a(): Record<string, string> {
+      return {}
+    }
+  }
+  ]
   // await chatStore.setHints();
   scrollToBottom();
 });
