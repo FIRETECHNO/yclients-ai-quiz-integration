@@ -22,77 +22,102 @@ async function scrollToBottom() {
 }
 
 onMounted(async () => {
-  await chatStore.fetchHistory();
+  /*await chatStore.fetchHistory();*/
 
-  chatStore.messages.value = [{
-    "role": "user", "content": "Привет", "author": 13373222, "isIncoming": false, payload: {
-      recommended_services: [],
-      services: []
+  chatStore.messages.value = [
+    {
+      role: "user",
+      content: "Привет",
+      author: 13373222,
+      isIncoming: false,
+      payload: {
+        recommended_services: [],
+        services: [],
+      },
+      toJSON: function a(): Record<string, string> {
+        return {};
+      },
     },
-    toJSON: function a(): Record<string, string> {
-      return {}
-    }
-  },
-  {
-    "role": "assistant", "author": -1, "isIncoming": true, "content": "Привет! Как я могу тебе помочь?", payload: {
-      recommended_services: [],
-      services: []
+    {
+      role: "assistant",
+      author: -1,
+      isIncoming: true,
+      content: "Привет! Как я могу тебе помочь?",
+      payload: {
+        recommended_services: [],
+        services: [],
+      },
+      toJSON: function a(): Record<string, string> {
+        return {};
+      },
     },
-    toJSON: function a(): Record<string, string> {
-      return {}
-    }
-  },
 
-  {
-    "role": "user", "content": "привет", "author": 13373222, "isIncoming": false, payload: {
-      recommended_services: [],
-      services: []
+    {
+      role: "user",
+      content: "привет",
+      author: 13373222,
+      isIncoming: false,
+      payload: {
+        recommended_services: [],
+        services: [],
+      },
+      toJSON: function a(): Record<string, string> {
+        return {};
+      },
     },
-    toJSON: function a(): Record<string, string> {
-      return {}
-    }
-  }
-    ,
-  {
-    "role": "assistant", "author": -1, "isIncoming": true, "content": "Привет! Чем займёмся?", payload: {
-      recommended_services: [],
-      services: []
+    {
+      role: "assistant",
+      author: -1,
+      isIncoming: true,
+      content: "Привет! Чем займёмся?",
+      payload: {
+        recommended_services: [],
+        services: [],
+      },
+      toJSON: function a(): Record<string, string> {
+        return {};
+      },
     },
-    toJSON: function a(): Record<string, string> {
-      return {}
-    }
-  }
-    ,
-  {
-    "role": "user", "content": "Записи есть?", "author": 13373222, "isIncoming": false, payload: {
-      recommended_services: [],
-      services: []
+    {
+      role: "user",
+      content: "Записи есть?",
+      author: 13373222,
+      isIncoming: false,
+      payload: {
+        recommended_services: [],
+        services: [],
+      },
+      toJSON: function a(): Record<string, string> {
+        return {};
+      },
     },
-    toJSON: function a(): Record<string, string> {
-      return {}
-    }
-  }
-    ,
-  {
-    "role": "assistant", "author": -1, "isIncoming": true, "content": "Кажется, все слоты заняты. Давай попробуем немного позже.", payload: {
-      recommended_services: [],
-      services: []
+    {
+      role: "assistant",
+      author: -1,
+      isIncoming: true,
+      content: "Кажется, все слоты заняты. Давай попробуем немного позже.",
+      payload: {
+        recommended_services: [],
+        services: [],
+      },
+      toJSON: function a(): Record<string, string> {
+        return {};
+      },
     },
-    toJSON: function a(): Record<string, string> {
-      return {}
-    }
-  }
-    ,
-  {
-    "role": "user", "content": "а в какой компании ты работаешь?", "author": 13373222, "isIncoming": false, payload: {
-      recommended_services: [],
-      services: []
+    {
+      role: "user",
+      content: "а в какой компании ты работаешь?",
+      author: 13373222,
+      isIncoming: false,
+      payload: {
+        recommended_services: [],
+        services: [],
+      },
+      toJSON: function a(): Record<string, string> {
+        return {};
+      },
     },
-    toJSON: function a(): Record<string, string> {
-      return {}
-    }
-  }
-  ]
+  ];
   // await chatStore.setHints();
   scrollToBottom();
 });
@@ -106,11 +131,22 @@ watch(messages, scrollToBottom, { deep: true });
   <v-container fluid class="fill-height">
     <v-row class="d-flex justify-center align-center fill-height">
       <v-col cols="12" md="8" xl="6" class="d-flex flex-column fill-height">
-        <v-sheet class="d-flex flex-column justify-center fill-height rounded-lg elevation-0" color="#121212">
+        <v-sheet
+          class="d-flex flex-column justify-center fill-height rounded-lg elevation-0"
+          color="#121212"
+        >
           <!-- Сообщения -->
-          <v-card-text v-if="messages.length > 0" class="flex-grow-1" style="overflow: hidden; padding: 0"
-            position="absolute">
-            <div ref="messagesContainer" class="h-100 overflow-y-auto" style="padding: 16px">
+          <v-card-text
+            v-if="messages.length > 0"
+            class="flex-grow-1"
+            style="overflow: hidden; padding: 0"
+            position="absolute"
+          >
+            <div
+              ref="messagesContainer"
+              class="h-100 overflow-y-auto"
+              style="padding: 16px"
+            >
               <div v-if="isLoadingHistory" class="text-center">
                 Загрузка истории...
               </div>
@@ -126,8 +162,17 @@ watch(messages, scrollToBottom, { deep: true });
           <div class="position-relative">
             <!-- Подсказки поверх поля ввода -->
             <div v-if="hints.length > 0" class="hints-floating">
-              <v-chip v-for="(quest, index) of hints" :key="index" size="x-large" @click="onHintClick(index)"
-                class="mr-2 mb-2" color="green" outlined small clickable>
+              <v-chip
+                v-for="(quest, index) of hints"
+                :key="index"
+                size="x-large"
+                @click="onHintClick(index)"
+                class="mr-2 mb-2"
+                color="green"
+                outlined
+                small
+                clickable
+              >
                 {{ quest }}
               </v-chip>
             </div>

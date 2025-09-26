@@ -9,7 +9,7 @@ function onHintClick(message: IMessage, index: number) {
 <template>
   <div class="d-flex justify-md-start">
     <v-card class="text-card" color="#212121" rounded="lg">
-      <v-card-text style="overflow-wrap: anywhere">
+      <v-card-text class="font-weight-medium" style="overflow-wrap: anywhere">
         {{ message.content }}
       </v-card-text>
       <v-chip

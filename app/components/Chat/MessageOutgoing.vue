@@ -3,9 +3,10 @@ defineProps<{ message: IMessage }>();
 </script>
 
 <template>
+  <v- class="d-flex justify-md-end font-weight-regular" color="#4ac672">Вы</v->
   <div class="d-flex justify-md-end">
-    <v-card class="text-card" color="#212121" rounded="lg">
-      <v-card-text style="overflow-wrap: anywhere">
+    <v-card class="text-card" color="#4ac672" rounded="lg">
+      <v-card-text class="font-weight-medium" style="overflow-wrap: anywhere">
         {{ message.content }}
       </v-card-text>
     </v-card>
