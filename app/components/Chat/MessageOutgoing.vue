@@ -3,9 +3,14 @@ defineProps<{ message: IMessage }>();
 </script>
 
 <template>
-  <v- class="d-flex justify-md-end font-weight-regular" color="#4ac672">Вы</v->
   <div class="d-flex justify-md-end">
     <v-card class="text-card" color="#4ac672" rounded="lg">
+      <v-card-item
+        class="d-flex justify-md-end font-weight-bold"
+        style="font-size: 0.7rem"
+        color="#4ac672"
+        >Вы</v-card-item
+      >
       <v-card-text class="font-weight-medium" style="overflow-wrap: anywhere">
         {{ message.content }}
       </v-card-text>
@@ -19,5 +24,11 @@ defineProps<{ message: IMessage }>();
   width: fit-content;
   height: fit-content;
   overflow: auto;
+}
+.message-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-bottom: 1px;
+  color: #333;
 }
 </style>
