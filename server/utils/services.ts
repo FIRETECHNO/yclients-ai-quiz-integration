@@ -1,26 +1,5 @@
 import { SerializedChatModel } from "@langchain/core/language_models/chat_models";
-type Staff = {
-  id: number;
-  imageUrl: string;
-  name: string;
-};
-type Service = {
-  serviceName: string;
-  CompanyId: number;
-  isChain: boolean;
-  id: number;
-  title: string;
-  categoryId: number;
-  priceMin: number;
-  priceMax: number;
-  discount: number;
-  comment: string;
-  prepaid: string;
-  isMulti: boolean;
-  staff: Staff[];
-  duration: number;
-};
-
+import { Service, Staff } from "~/utils/service";
 function extractData(data: any[]) {
   const resultServices: Service[] = [];
   let resultString: string = "Услуги :\n";
@@ -36,22 +15,23 @@ function extractData(data: any[]) {
       staffString += `${el.name}, `;
     });
     staffString += "\n";
-    const elem: Service = {
-      serviceName: element.booking_title,
-      CompanyId: element.salon_service_id,
-      isChain: element.is_chain,
-      id: element.id,
-      title: element.title,
-      categoryId: element.category_id,
-      priceMin: element.price_min,
-      priceMax: element.price_max,
-      discount: element.discount,
-      comment: element.comment,
-      prepaid: element.prepaid,
-      isMulti: element.is_multi,
-      staff: staff,
-      duration: element.duration,
-    };
+    const elem = new Service(
+      element.booking_title,
+      element.salon_service_id,
+      element.is_chain,
+      element.id,
+      element.title,
+      element.category_id,
+      element.price_min,
+      element.price_max,
+      element.discount,
+      element.comment,
+      element.prepaid,
+      element.is_multi,
+      staff,
+      element.duration,
+      element.image_group.image.basic
+    );
 
     resultString += `Услуга* ${elem.serviceName}
     Id услуги: ${elem.id}
