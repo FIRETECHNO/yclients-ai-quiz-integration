@@ -92,5 +92,8 @@ function onFocusServiceClick() {}
   border-radius: 12px;
   transition: all 0.3s ease;
   cursor: pointer;
+  aspect-ratio: 1 / 1;
+  max-width: 400px;
+  max-height: 400px;
 }
 </style>
