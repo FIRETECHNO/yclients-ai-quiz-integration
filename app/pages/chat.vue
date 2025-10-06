@@ -46,6 +46,7 @@ watch(messages, scrollToBottom, { deep: true });
               </div>
               <div v-else>
                 <div v-for="msg of messages" :key="msg._id" class="mb-2">
+                  
                   <ChatMessageIncoming v-if="msg.isIncoming" :message="msg" />
                   <ChatMessageOutgoing v-else :message="msg" />
                 </div>
