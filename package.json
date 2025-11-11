@@ -6,6 +6,7 @@
     "build": "nuxt build",
     "dev:cert": "cross-env NODE_EXTRA_CA_CERTS=C:\\Users\\Lenovo\\Documents\\Sert\\Russian-Trusted-Root-CA.cer nuxt dev",
     "dev:cert-grisha": "NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/russian_trusted_root_ca.crt nuxt dev",
+    "dev:cert-gleb": "NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/mintsifra/russian_trusted_root_ca_pem.crt nuxt dev",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",

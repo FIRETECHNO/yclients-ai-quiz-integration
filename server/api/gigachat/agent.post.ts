@@ -1,8 +1,4 @@
-import { AgentExecutor, createStructuredChatAgent } from "langchain/agents";
-import { DynamicTool } from "langchain/tools";
-import { AIMessage, HumanMessage } from "@langchain/core/messages";
-import { PromptTemplate } from "@langchain/core/prompts";
-import { getModel } from "../../utils/aiAgent";
+import { ProxyAPIChatModel } from "../../utils/proxyapiLLM";
 import { useRedis } from "../../utils/redis";
 
 const MAX_HISTORY_LENGTH = 100;
@@ -27,7 +23,7 @@ export default defineEventHandler(async (event) => {
 
   const [companyDataString, chatHistoryStrings] = await Promise.all([
     redis.get(companyKey),
-    redis.lRange(chatKey, 0, -1),
+    redis.lRange(chatKey, -MAX_HISTORY_LENGTH, -1),
   ]);
 
   if (!companyDataString) {
@@ -36,116 +32,77 @@ export default defineEventHandler(async (event) => {
       message: `Компания с ID "${companyId}" не найдена`,
     });
   }
+
   const companyData = JSON.parse(companyDataString);
 
-  const chatHistory = chatHistoryStrings
-    .map((msg) => {
-      const parsed = JSON.parse(msg);
-      return parsed.role === "user"
-        ? `User: ${parsed.content}`
-        : `Assistant: ${parsed.content}`;
-    })
-    .join("\n");
-
-  const llm = await getModel();
-
-  const tools = [
-    new DynamicTool({
-      name: "get_available_booking_slots",
-      description:
-        'Получает список свободных слотов для записи. Входные данные — строка с названием услуги, например "мужская стрижка".',
-      func: async (serviceName: string) => {
-        try {
-          const slots: any = ["12:00 завтра"];
-          if (slots.length === 0) {
-            return `Свободных слотов для услуги "${serviceName}" не найдено.`;
-          }
-          return `Доступные слоты для "${serviceName}": ${JSON.stringify(
-            slots
-          )}`;
-        } catch (e) {
-          return "Не удалось получить слоты. Возможно, услуга указана неверно.";
-        }
-      },
-    }),
-  ];
-
-  const toolDescriptions = tools
-    .map((t) => `${t.name}: ${t.description}`)
-    .join("\n");
-
-  const promptTemplate = `Ты — дружелюбный ассистент компании "${companyData.name}".
-У тебя есть доступ к инструментам:
-{tools}
-
-Имена инструментов: {tool_names}
-
-**ВАЖНОЕ ПРАВИЛО ФОРМАТИРОВАНИЯ:**
-Когда ты готов дать финальный ответ пользователю, твой ответ ДОЛЖЕН БЫТЬ СТРОГО в формате JSON.
-Не пиши ничего, кроме валидного JSON.
-
-Структура JSON для финального ответа должна быть такой:
-{{
-  "answer": "Твой текстовый ответ пользователю.",
-  "suggestions": [
-    // Здесь должны быть подсказки. Соблюдай следующие ПРАВИЛА:
-    // 1. Генерируй от 0 до 4 подсказок. Не больше четырех.
-    // 2. Добавляй подсказки, только если они ДЕЙСТВИТЕЛЬНО полезны и логически продолжают диалог.
-    // 3. Качество важнее количества. Лучше одна хорошая подсказка, чем три бесполезных.
-    // 4. Если диалог логически завершен (например, пользователь поблагодарил) или подходящих подсказок нет, верни пустой массив [].
-  ]
-}}
-
-Если нужен инструмент — выбери одно из имён инструментов из списка.
-История диалога:
-{chat_history}
-
-Вопрос: {input}
-
-{agent_scratchpad}`;
-
-  const prompt = PromptTemplate.fromTemplate(promptTemplate);
-  console.log(llm.modelName);
-  const agent = await createStructuredChatAgent({
-    llm,
-    tools,
-    prompt,
+  const chatHistory = chatHistoryStrings.map((msg) => {
+    const parsed = JSON.parse(msg);
+    return {
+      role: parsed.role,
+      content: parsed.content,
+    };
   });
 
-  const agentExecutor = new AgentExecutor({ agent, tools });
+  const systemPrompt = `
+Ты — умный и дружелюбный ассистент компании "${companyData.name}".
+Твоя цель — помогать пользователю выбирать услуги компании и давать короткие привлекательные сообщения.
 
-  let result: any;
-  let finalAnswer: string;
+Вот список доступных услуг в JSON-формате:
+${JSON.stringify(companyData.services, null, 2)}
+
+Инструкции:
+1. ТЫ МОЖЕШЬ ВЫБИРАТЬ ТОЛЬКО из этих услуг. Нельзя придумывать новые ID или брать значения, которых нет.
+2. Если подходящей услуги нет — верни пустой список: "services": [].
+3. В ответе ВСЕГДА должен быть корректный JSON (без Markdown, без пояснений, без текста вне JSON).
+4. Формат ответа строго следующий:
+
+{
+  "services": ["id_услуги_1", "id_услуги_2"],
+  "message": "короткий привлекательный текст, который мотивирует пользователя обратить внимание на эти услуги"
+}
+Помни:
+— Никаких лишних полей и текста.
+— Всегда возвращай только JSON.
+— Если сомневаешься, просто верни пустой массив services.
+`;
+
+  const model = new ProxyAPIChatModel();
+  let finalAnswer: any = {
+    services: [],
+    message: "Извините, не удалось получить ответ.",
+  };
 
   try {
-    result = await agentExecutor.invoke({
-      input: message,
-      chat_history: chatHistory,
-      tools: toolDescriptions,
-      tool_names: tools.map((t) => t.name).join(", "),
-    });
+    const messagesForModel = [
+      { role: "system", content: systemPrompt },
+      ...chatHistory,
+      { role: "user", content: message },
+    ];
 
-    console.log(result);
+    const response = await model.invoke(messagesForModel);
 
-    // Для Structured Chat Agent ответ приходит в result.output или напрямую в result
-    finalAnswer =
-      typeof result.output === "string"
-        ? result.output
-        : JSON.stringify(result);
-  } catch (error: any) {
-    console.error(error);
+    const raw =
+      typeof response?.content === "string"
+        ? response.content
+        : JSON.stringify(response?.content);
 
-    if (error.constructor?.name === "OutputParserException") {
-      console.warn(
-        "[Agent Warning] OutputParserException caught. Using LLM's raw output."
-      );
-      finalAnswer = error.llmOutput;
-    } else {
-      throw createError({
-        statusCode: 500,
-        message: "Произошла ошибка при обработке вашего запроса.",
-      });
+    console.log("AI RAW:", raw);
+
+    try {
+      finalAnswer = JSON.parse(raw);
+    } catch (e) {
+      console.error("Ошибка парсинга JSON:", e);
+      finalAnswer = {
+        services: [],
+        message: raw || "Не удалось распознать ответ модели.",
+      };
     }
+  } catch (error: any) {
+    console.error("Ошибка AI запроса:", error);
+    throw createError({
+      statusCode: 500,
+      message: "Ошибка при обращении к ProxyAPI модели",
+    });
   }
 
   const userMessageToSave = {
@@ -154,17 +111,20 @@ export default defineEventHandler(async (event) => {
     author: userId,
     isIncoming: false,
   };
+
   const aiResponseToSave = {
     role: "assistant",
     author: -1,
     isIncoming: true,
-    content: finalAnswer || "К сожалению, я не смог обработать ваш запрос.",
+    content: finalAnswer.message,
   };
 
-  await Promise.all([
-    redis.rPush(chatKey, JSON.stringify(userMessageToSave)),
-    redis.rPush(chatKey, JSON.stringify(aiResponseToSave)),
-  ]);
-  await redis.lTrim(chatKey, -MAX_HISTORY_LENGTH, -1);
+  await redis
+    .multi()
+    .rPush(chatKey, JSON.stringify(userMessageToSave))
+    .rPush(chatKey, JSON.stringify(aiResponseToSave))
+    .lTrim(chatKey, -MAX_HISTORY_LENGTH, -1)
+    .exec();
+
   return { output: finalAnswer };
 });
