@@ -2,27 +2,39 @@ export default {
   async askAi(
     message: IMessage,
     companyId: number
-  ): Promise<{ output: { answer: string; suggestions: string[] } }> {
+  ): Promise<{ output: { message: string; services: string[]; suggestions?: string[] } }> {
     if (!message.author) throw new Error("No author of message");
 
-    let toSend = {
+    const toSend = {
       message: message.content,
       userId: message.author,
       companyId,
     };
     console.log("--- Send message: ", toSend);
 
-    let data = await $fetch<{
-      output: { answer: string; suggestions: string[] } | string;
-    }>("/api/gigachat/agent", {
+    const data = await $fetch<{ output: any }>("/api/gigachat/agent", {
       method: "POST",
       body: toSend,
     });
-    if (typeof data.output !== "object" || data === null) {
-      console.warn(`Ожидался объект, но получен: ${typeof data}`);
-      return { output: { answer: data.output as string, suggestions: [] } };
+
+    if (!data.output || typeof data.output !== "object") {
+      console.warn("Ожидался объект в output, но получен:", data.output);
+      return {
+        output: {
+          message: String(data.output ?? "AI не вернул текст"),
+          services: [],
+          suggestions: [],
+        },
+      };
     }
-    return { output: data.output as { answer: string; suggestions: string[] } };
+
+    const output = {
+      message: String(data.output.message ?? "AI не вернул текст"),
+      services: data.output.services ?? [],
+      suggestions: data.output.suggestions ?? [],
+    };
+
+    return { output };
   },
   async saveMessage(
     message: IMessage,

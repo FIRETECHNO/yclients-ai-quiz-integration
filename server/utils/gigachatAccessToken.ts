@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 
 export async function getGigaToken(): Promise<string> {
+
   const {
     gigachatAuthKey } = useRuntimeConfig();
 
@@ -18,7 +19,7 @@ export async function getGigaToken(): Promise<string> {
         body: new URLSearchParams({ scope: "GIGACHAT_API_PERS" }),
       }
     );
-
+    console.log("✅ GigaChat токен получен:", resp.access_token.slice(0, 10) + "...")
     return resp.access_token;
   } catch (error: any) {
     console.log(error.data);

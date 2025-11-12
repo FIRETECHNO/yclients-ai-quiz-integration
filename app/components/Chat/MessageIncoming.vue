@@ -1,144 +1,59 @@
 <script setup lang="ts">
+import { toRaw } from "vue";
 import { Service } from "~/utils/service";
 import ServiceCard from "./ServiceCard.vue";
 
-defineProps<{ message: IMessage }>();
+const props = defineProps<{ message: IMessage }>();
 const chatStore = useChat();
-const focusService = ref<IService[]>([
-  new Service(
-    "Стрижка",
-    123,
-    false,
-    2323,
-    "Strishka",
-    324324,
-    0,
-    2000,
-    0,
-    "element.comment",
-    "false",
-    false,
-    [],
-    3600,
-    "https://assets.yclients.com/main_service_image/basic/5/56/568e4d6379dcf69_20240723100743.png"
-  ),
-  new Service(
-    "Стрижка",
-    123,
-    false,
-    2323,
-    "Strishka",
-    324324,
-    0,
-    2000,
-    0,
-    "element.comment",
-    "false",
-    false,
-    [],
-    3600,
-    "https://assets.yclients.com/main_service_image/basic/5/56/568e4d6379dcf69_20240723100743.png"
-  ),
-  new Service(
-    "Стрижка",
-    123,
-    false,
-    2323,
-    "Strishka",
-    324324,
-    0,
-    2000,
-    0,
-    "element.comment",
-    "false",
-    false,
-    [],
-    3600,
-    "https://assets.yclients.com/main_service_image/basic/5/56/568e4d6379dcf69_20240723100743.png"
-  ),
-  new Service(
-    "Стрижкаффффффффффффффффффффффффффффффффффффффффффффффффффффф",
-    123,
-    false,
-    2323,
-    "Strishka",
-    324324,
-    0,
-    2000,
-    0,
-    "element.comment",
-    "false",
-    false,
-    [],
-    3600,
-    "https://assets.yclients.com/main_service_image/basic/d/d2/d2399c814d86af5_20240723100059.png"
-  ),
-  new Service(
-    "Стрижка",
-    123,
-    false,
-    2323,
-    "Strishka",
-    324324,
-    0,
-    2000,
-    0,
-    "element.comment",
-    "false",
-    false,
-    [],
-    3600,
-    "https://assets.yclients.com/main_service_image/basic/d/d2/d2399c814d86af5_20240723100059.png"
-  ),
-]);
-function onHintClick(message: IMessage, index: number) {
-  console.log(message.payload.recommended_services[index]);
-  //focusService.value = message.payload.recommended_services[index];
+
+const focusService = ref<string | IService | null>(null);
+
+function onServiceClick(service: string | IService) {
+  console.log("Clicked service raw:", toRaw(service));
+  focusService.value = service;
 }
-function onFocusServiceClick() {}
-function bookService(service: IService) {
-  console.log("Запись на сервис:", service);
+
+function onFocusServiceClick() {
+  if (focusService.value) {
+    console.log("Clicked service details:", focusService.value);
+  }
 }
 </script>
 
 <template>
   <div class="d-flex justify-md-start">
     <v-card class="text-card" color="#212121" rounded="lg">
+      <!-- Текст от AI -->
       <v-card-text style="overflow-wrap: anywhere">
         {{ message.content }}
       </v-card-text>
-      <v-card class="text-card" color="#212121" rounded="lg">
-        <v-chip
-          v-for="(service, index) of message.payload.services"
-          :key="index"
-          size="x-large"
-          @click="onHintClick(message, index)"
-          class="mr-2 mb-2"
-          color="green"
-          outlined
-          small
-          clickable
-        >
-          {{ service.serviceName }}
+
+      <!-- Список услуг -->
+      <v-card v-if="message.payload?.services?.length" class="text-card mt-2" color="#212121" rounded="lg">
+        <v-chip v-for="(service, index) in message.payload.services" :key="index" size="x-large"
+          @click="onServiceClick(service)" class="mr-2 mb-2" color="green" outlined small clickable>
+          {{ service }}
         </v-chip>
       </v-card>
-      <v-card
-        v-if="focusService.length > 0"
-        class="focus-service"
-        color="gray"
-        variant="outlined"
-      >
-        <div class="scroll-container">
-          <v-row class="flex-nowrap">
-            <v-col
-              v-for="service in focusService"
-              :key="service.id"
-              class="flex-shrink-0 service-item-col"
-            >
-              <ServiceCard :service="service" @book="bookService" />
-            </v-col>
-          </v-row>
-        </div>
+
+      <!-- Детали выбранной услуги -->
+      <v-card v-if="focusService?.length > 0" class="focus-service" @click="onFocusServiceClick" color="gray"
+        variant="outlined">
+        <v-card-title>
+          Процедура:
+          {{ focusService }}
+        </v-card-title>
+
+        <v-card-text v-if="typeof focusService !== 'string'">
+          <div v-if="focusService?.comment">
+            <strong>Описание:</strong> {{ focusService.comment }}
+          </div>
+          <div v-if="focusService?.duration">
+            <strong>Длительность:</strong>
+            {{ Math.round(focusService.duration / 60) }} минут
+          </div>
+          <v-img v-if="focusService?.imagePath" :src="focusService.imagePath" alt="service" cover />
+        </v-card-text>
       </v-card>
     </v-card>
   </div>
@@ -156,8 +71,9 @@ function bookService(service: IService) {
 
 .focus-service {
   margin: 20px;
-  border: 3px solid #ffffff;
-  border-radius: 12px;
+  <<<<<<< HEAD border: 3px solid #ffffff;
+  =======border: 2px solid #4caf50;
+  >>>>>>>gleb border-radius: 12px;
   transition: all 0.3s ease;
   cursor: pointer;
   max-width: 400px;

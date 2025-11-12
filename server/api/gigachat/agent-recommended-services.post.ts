@@ -16,7 +16,7 @@ function createSystemPrompt(company: any): string {
   const { prompt } = useServices.extractData(array);
 
   return `Ты — вежливый и полезный ИИ-ассистент компании "${company.name}".
-Твоя задача — консультировать клиентов, помогать с выбором услуг. Ты не можешь никого никуда записать - только подсказать, какие услуги релевантны.
+Твоя задача — консультировать клиентов, помогать с выбором услуг. Ты не можешь никого никуда записать — только подсказать, какие услуги релевантны.
 Никогда не выдумывай услуги, цены или акции. Используй только информацию ниже.
 
 ИНФОРМАЦИЯ О КОМПАНИИ:
@@ -28,16 +28,25 @@ function createSystemPrompt(company: any): string {
 НАШИ УСЛУГИ:
 ${prompt}
 
+ВАЖНО:
+1. Отвечай **только в формате JSON**. Ни одного слова больше.
+2. Формат JSON должен строго соответствовать следующей структуре:
 
-Твой ответ ДОЛЖЕН БЫТЬ в формате JSON. Не пиши ничего, кроме JSON.
-
-Структура JSON должна быть следующей:
 {
   "services": [
-    "здесь здесь идет массив id услуг которые подойдут пользователю",
+    "сюда вставляются id услуг, которые подходят пользователю"
   ]
-}`;
 }
+
+3. Если не можешь подобрать ни одной услуги, верни пустой массив:
+{
+  "services": []
+}
+
+4. Не добавляй приветствий, объяснений, смайликов или лишнего текста.
+5. Если твой ответ не является корректным JSON — повтори его заново, только в формате JSON.`;
+}
+
 
 // Определяем типы для удобства
 type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
@@ -92,6 +101,28 @@ export default defineEventHandler(async (event) => {
     ...chatHistory,
     userMessage,
   ];
+
+  // 1️⃣ Логируем всё, что реально пойдёт в модель
+  console.log("=== RAW MESSAGES SENT TO LLM ===");
+  console.log(JSON.stringify(messagesForLlm, null, 2));
+
+  // 2️⃣ Нормализуем формат сообщений (чтобы роли были правильными)
+  function normalizeMessages(messages: any[]) {
+    return messages.map((m) => {
+      if (m._getType) return m; // уже LangChain message
+      const role = (m.role || m.type || "").toLowerCase();
+      const content = m.content ?? m.message ?? m.text ?? "";
+      if (role === "system" || role === "assistant" || role === "user") {
+        return { role, content };
+      }
+      return { role: "user", content };
+    });
+  }
+
+  const normalizedMessages = normalizeMessages(messagesForLlm);
+
+  console.log("=== NORMALIZED MESSAGES ===");
+  console.log(JSON.stringify(normalizedMessages, null, 2));
 
   // 4. Вызываем GigaChat (ваша логика остается почти такой же)
   const llm = await getModel();
