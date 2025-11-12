@@ -1,3 +1,5 @@
+import type { IMessage } from "~~/server/types/IMessage.interface";
+
 export default {
   async askAi(
     message: IMessage,
