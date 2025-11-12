@@ -70,6 +70,7 @@ ${useServices.createServicesPrompt(companyData.services)}
 — Всегда возвращай только JSON.
 — Если сомневаешься, просто верни пустой массив services.
 — Общайся как живой человек.
+— Выдавай максимум 3 услуги
 `;
 
   const model = new ProxyAPIChatModel();
