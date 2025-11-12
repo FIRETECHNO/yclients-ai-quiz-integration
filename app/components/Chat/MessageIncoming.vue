@@ -37,8 +37,7 @@ function onFocusServiceClick() {
       </v-card>
 
       <!-- Детали выбранной услуги -->
-      <v-card v-if="focusService?.length > 0" class="focus-service" @click="onFocusServiceClick" color="gray"
-        variant="outlined">
+      <v-card v-if="focusService" class="focus-service" @click="onFocusServiceClick" color="gray" variant="outlined">
         <v-card-title>
           Процедура:
           {{ focusService }}
@@ -71,9 +70,8 @@ function onFocusServiceClick() {
 
 .focus-service {
   margin: 20px;
-  <<<<<<< HEAD border: 3px solid #ffffff;
-  =======border: 2px solid #4caf50;
-  >>>>>>>gleb border-radius: 12px;
+  border: 2px solid #4caf50;
+  border-radius: 12px;
   transition: all 0.3s ease;
   cursor: pointer;
   max-width: 400px;
