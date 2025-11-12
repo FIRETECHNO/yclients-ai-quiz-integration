@@ -3,6 +3,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { getModel } from "../utils/aiAgent";
 import { useRedis } from "../utils/redis";
 import { createBarberTools } from "../utils/barberTools";
+import { ICompany } from "../types/ICompany.interface";
 
 const MAX_HISTORY_LENGTH = 100;
 
@@ -30,7 +31,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: `Компания не найдена` });
   }
 
-  const companyData = JSON.parse(companyDataString);
+  const companyData: ICompany = JSON.parse(companyDataString);
   const chatHistory = chatHistoryStrings.map(msg => JSON.parse(msg));
 
   const tools = createBarberTools(companyData.services || []);
@@ -101,8 +102,8 @@ export default defineEventHandler(async (event) => {
   }
 
   // Сохраняем в Redis
-  const userMsg = { role: "user", content: message, author: userId, isIncoming: false };
-  const aiMsg = { role: "assistant", content: finalAnswer.message, author: -1, isIncoming: true };
+  const userMsg = { role: "user", content: message, author: userId, payload: null, isIncoming: false };
+  const aiMsg = { role: "assistant", content: finalAnswer.message, payload: { services: finalAnswer.services }, author: -1, isIncoming: true };
 
   await redis
     .multi()
