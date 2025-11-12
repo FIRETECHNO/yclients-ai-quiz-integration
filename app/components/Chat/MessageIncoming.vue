@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { toRaw } from "vue";
-import { Service } from "~/utils/service";
 import ServiceCard from "./ServiceCard.vue";
 import type { IMessageDB } from "~~/server/types/IMessage.interface";
 import type { IService } from "~/types/service.interface";

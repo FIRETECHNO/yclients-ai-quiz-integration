@@ -4,6 +4,7 @@ import { useRedis } from "../../utils/redis";
 
 // types
 import type { IFinalAnswer } from "~~/server/types/IFinalAnswer.interface";
+import { ICompany } from "~~/server/types/ICompany.interface";
 
 const MAX_HISTORY_LENGTH = 100;
 
@@ -37,7 +38,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const companyData = JSON.parse(companyDataString);
+  const companyData: ICompany = JSON.parse(companyDataString);
 
   const chatHistory = chatHistoryStrings.map((msg) => {
     const parsed = JSON.parse(msg);
@@ -52,7 +53,7 @@ export default defineEventHandler(async (event) => {
 Твоя цель — помогать пользователю выбирать услуги компании и давать короткие привлекательные сообщения.
 
 Вот список доступных услуг в JSON-формате:
-${JSON.stringify(companyData.services, null, 2)}
+${useServices.createServicesPrompt(companyData.services)}
 
 Инструкции:
 1. ТЫ МОЖЕШЬ ВЫБИРАТЬ ТОЛЬКО из этих услуг. Нельзя придумывать новые ID или брать значения, которых нет.

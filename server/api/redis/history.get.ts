@@ -1,17 +1,6 @@
-import { GigaChatChatModel } from "../../utils/gigachatLLM";
-import { getGigaToken } from "../../utils/gigachatAccessToken";
 import { useRedis } from "../../utils/redis";
-import { Message } from "~/utils/message";
 import type { IMessageDB } from "~~/server/types/IMessage.interface";
-/*
-{
-"role":"assistant",
-"author":-1,
-"isIncoming":true,
-"content":"Привет! Готов помочь вам выбрать лучшие услуги для вашего стиля."
-"services": string[]
-}
-*/
+
 export default defineEventHandler(async (event): Promise<IMessageDB[]> => {
   const { companyId, userId } = getQuery(event);
 
