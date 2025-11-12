@@ -1,20 +1,16 @@
-declare global {
-  interface IMessage {
-    role: string;
-    _id?: string;
-    content: string;
-    payload: IPayload;
-    author?: number | -1;
-    isIncoming: boolean;
-
-    toJSON(): Record<string, any>;
-    toString(): string;
-  }
-
-  interface IPayload {
-    recommended_services: number[];
-    services: any[];
-  }
+interface IMessage {
+  role: string;
+  content: string;
+  author: number | -1;
+  isIncoming: boolean;
+  payload: PayloadType | null;
 }
 
-export { IMessage, IPayload };
+export interface IMessageDB extends IMessage {
+  payload: PayloadType | null
+  _id: string
+}
+
+type PayloadType = {
+  services: string[]
+}

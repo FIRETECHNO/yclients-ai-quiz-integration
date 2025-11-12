@@ -2,13 +2,16 @@
 import { toRaw } from "vue";
 import { Service } from "~/utils/service";
 import ServiceCard from "./ServiceCard.vue";
+import type { IMessageDB } from "~~/server/types/IMessage.interface";
+import type { IService } from "~/types/service.interface";
+import type { IMessage } from "~/types/message.interface";
 
-const props = defineProps<{ message: IMessage }>();
+const props = defineProps<{ message: IMessageDB | IMessage }>();
 const chatStore = useChat();
 
-const focusService = ref<string | IService | null>(null);
+const focusService = ref<string | null>(null);
 
-function onServiceClick(service: string | IService) {
+function onServiceClick(service: string) {
   console.log("Clicked service raw:", toRaw(service));
   focusService.value = service;
 }
@@ -29,12 +32,14 @@ function onFocusServiceClick() {
       </v-card-text>
 
       <!-- Список услуг -->
-      <v-card v-if="message.payload?.services?.length" class="text-card mt-2" color="#212121" rounded="lg">
-        <v-chip v-for="(service, index) in message.payload.services" :key="index" size="x-large"
-          @click="onServiceClick(service)" class="mr-2 mb-2" color="green" outlined small clickable>
-          {{ service }}
-        </v-chip>
-      </v-card>
+      <div v-if="message?.payload">
+        <v-card v-if="message.payload?.services?.length" class="text-card mt-2" color="#212121" rounded="lg">
+          <v-chip v-for="(service, index) in message.payload.services" :key="index" size="x-large"
+            @click="onServiceClick(service)" class="mr-2 mb-2" color="green" outlined small clickable>
+            {{ service }}
+          </v-chip>
+        </v-card>
+      </div>
 
       <!-- Детали выбранной услуги -->
       <v-card v-if="focusService" class="focus-service" @click="onFocusServiceClick" color="gray" variant="outlined">
@@ -42,17 +47,6 @@ function onFocusServiceClick() {
           Процедура:
           {{ focusService }}
         </v-card-title>
-
-        <v-card-text v-if="typeof focusService !== 'string'">
-          <div v-if="focusService?.comment">
-            <strong>Описание:</strong> {{ focusService.comment }}
-          </div>
-          <div v-if="focusService?.duration">
-            <strong>Длительность:</strong>
-            {{ Math.round(focusService.duration / 60) }} минут
-          </div>
-          <v-img v-if="focusService?.imagePath" :src="focusService.imagePath" alt="service" cover />
-        </v-card-text>
       </v-card>
     </v-card>
   </div>

@@ -1,12 +1,16 @@
+import { IMessage } from "~~/server/types/IMessage.interface";
 import { ProxyAPIChatModel } from "../../utils/proxyapiLLM";
 import { useRedis } from "../../utils/redis";
+
+// types
+import type { IFinalAnswer } from "~~/server/types/IFinalAnswer.interface";
 
 const MAX_HISTORY_LENGTH = 100;
 
 export default defineEventHandler(async (event) => {
   const { companyId, userId, message } = await readBody<{
     companyId: string;
-    userId: string;
+    userId: number;
     message: string;
   }>(event);
 
@@ -64,11 +68,11 @@ ${JSON.stringify(companyData.services, null, 2)}
 — Никаких лишних полей и текста.
 — Всегда возвращай только JSON.
 — Если сомневаешься, просто верни пустой массив services.
-- Общайся как живой человек.
+— Общайся как живой человек.
 `;
 
   const model = new ProxyAPIChatModel();
-  let finalAnswer: any = {
+  let finalAnswer: IFinalAnswer = {
     services: [],
     message: "Извините, не удалось получить ответ.",
   };
@@ -87,8 +91,6 @@ ${JSON.stringify(companyData.services, null, 2)}
         ? response.content
         : JSON.stringify(response?.content);
 
-    console.log("AI RAW:", raw);
-
     try {
       finalAnswer = JSON.parse(raw);
     } catch (e) {
@@ -106,18 +108,22 @@ ${JSON.stringify(companyData.services, null, 2)}
     });
   }
 
-  const userMessageToSave = {
+  const userMessageToSave: IMessage = {
     role: "user",
     content: message,
     author: userId,
     isIncoming: false,
+    payload: null
   };
 
-  const aiResponseToSave = {
+  const aiResponseToSave: IMessage = {
     role: "assistant",
     author: -1,
     isIncoming: true,
     content: finalAnswer.message,
+    payload: {
+      services: finalAnswer.services
+    }
   };
 
   await redis
