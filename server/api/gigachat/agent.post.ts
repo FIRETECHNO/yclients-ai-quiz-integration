@@ -64,6 +64,7 @@ ${JSON.stringify(companyData.services, null, 2)}
 — Никаких лишних полей и текста.
 — Всегда возвращай только JSON.
 — Если сомневаешься, просто верни пустой массив services.
+- Общайся как живой человек.
 `;
 
   const model = new ProxyAPIChatModel();
