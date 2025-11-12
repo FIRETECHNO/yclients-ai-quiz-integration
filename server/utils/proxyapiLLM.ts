@@ -5,8 +5,8 @@ export class ProxyAPIChatModel extends ChatOpenAI {
     const apiKey = process.env.OPENAI_API_KEY;
     super({
       openAIApiKey: apiKey,
-      modelName: "gpt-4o-2024-08-06", // или gpt-4o-mini
-      temperature: 0.3,
+      modelName: "gpt-4o-mini-2024-07-18", // или gpt-4o-mini
+      temperature: 0.5,
       maxTokens: 512,
       configuration: {
         baseURL: "https://api.proxyapi.ru/openai/v1",

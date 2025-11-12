@@ -13,6 +13,18 @@ export const createBarberTools = (availableServices: IShortService[]) => {
 
   return [
     new DynamicStructuredTool({
+      name: "get_available_services",
+      description: "Возвращает полный список доступных услуг с названиями и описаниями. Используй, если нужно понять, какие услуги предлагает барбершоп.",
+      schema: z.object({}),
+      func: async () => {
+        // Форматируем услуги в читаемый текст для LLM
+        const servicesText = availableServices
+          .map(s => `ID: ${s.id}, Название: "${s.name}"${s.description ? `, Описание: ${s.description}` : ''}`)
+          .join("\n");
+        return servicesText;
+      },
+    }),
+    new DynamicStructuredTool({
       name: "recommend_services",
       description: `Рекомендует услуги барбершопа. Доступные ID: ${serviceIdList}`,
 
