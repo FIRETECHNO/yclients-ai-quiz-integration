@@ -1,12 +1,12 @@
-import { IMessage } from "~~/server/types/IMessage.interface";
-import { ProxyAPIChatModel } from "../../utils/proxyapiLLM";
+// server/api/chat.post.ts
+import { defineEventHandler, createError, readBody } from "h3";
 import { useRedis } from "../../utils/redis";
-
-// types
+import { BarbershopAgent } from "../../utils/agent/barbershopAgent";
+import type { IMessage } from "~~/server/types/IMessage.interface";
 import type { IFinalAnswer } from "~~/server/types/IFinalAnswer.interface";
-import { ICompany } from "~~/server/types/ICompany.interface";
 
-const MAX_HISTORY_LENGTH = 100;
+const MAX_HISTORY_LENGTH = 50;
+const agentCache = new Map<string, BarbershopAgent>();
 
 export default defineEventHandler(async (event) => {
   const { companyId, userId, message } = await readBody<{
@@ -15,124 +15,74 @@ export default defineEventHandler(async (event) => {
     message: string;
   }>(event);
 
-  if (!companyId || !userId || !message) {
-    throw createError({
-      statusCode: 400,
-      message: "companyId, userId и message обязательны",
-    });
+  if (!companyId || !userId || !message?.trim()) {
+    throw createError({ statusCode: 400, message: "Неверные параметры" });
   }
 
   const redis = await useRedis.getRedisClient();
   const companyKey = `company:${companyId}`;
   const chatKey = `chat:${companyId}:${userId}`;
 
-  const [companyDataString, chatHistoryStrings] = await Promise.all([
-    redis.get(companyKey),
-    redis.lRange(chatKey, -MAX_HISTORY_LENGTH, -1),
-  ]);
-
+  // === Загружаем компанию ===
+  const companyDataString = await redis.get(companyKey);
   if (!companyDataString) {
-    throw createError({
-      statusCode: 404,
-      message: `Компания с ID "${companyId}" не найдена`,
-    });
+    throw createError({ statusCode: 404, message: "Компания не найдена" });
+  }
+  const companyData = JSON.parse(companyDataString);
+
+  // === Инициализация агента (один раз) ===
+  let agent = agentCache.get(companyId);
+  if (!agent) {
+    agent = new BarbershopAgent(companyData.name, companyData.services);
+    await agent.init();
+    agentCache.set(companyId, agent);
   }
 
-  const companyData: ICompany = JSON.parse(companyDataString);
+  // === История ===
+  const historyStrings = await redis.lRange(chatKey, -MAX_HISTORY_LENGTH, -1);
+  const history = historyStrings.map(m => JSON.parse(m));
 
-  const chatHistory = chatHistoryStrings.map((msg) => {
-    const parsed = JSON.parse(msg);
-    return {
-      role: parsed.role,
-      content: parsed.content,
-    };
-  });
-
-  const systemPrompt = `
-Ты — умный и дружелюбный ассистент компании "${companyData.name}".
-Твоя цель — помогать пользователю выбирать услуги компании и давать короткие привлекательные сообщения.
-
-Вот список доступных услуг в JSON-формате:
-${useServices.createServicesPrompt(companyData.services)}
-
-Инструкции:
-1. ТЫ МОЖЕШЬ ВЫБИРАТЬ ТОЛЬКО из этих услуг. Нельзя придумывать новые ID или брать значения, которых нет.
-2. Если подходящей услуги нет — верни пустой список: "services": [].
-3. В ответе ВСЕГДА должен быть корректный JSON (без Markdown, без пояснений, без текста вне JSON).
-4. Формат ответа строго следующий:
-
-{
-  "services": ["id_услуги_1", "id_услуги_2"],
-  "message": "короткий привлекательный текст, который мотивирует пользователя обратить внимание на эти услуги"
-}
-Помни:
-— Никаких лишних полей и текста.
-— Всегда возвращай только JSON.
-— Если сомневаешься, просто верни пустой массив services.
-— Общайся как живой человек.
-— Выдавай максимум 3 услуги
-`;
-
-  const model = new ProxyAPIChatModel();
+  // === Запрос к агенту ===
   let finalAnswer: IFinalAnswer = {
     services: [],
-    message: "Извините, не удалось получить ответ.",
+    message: "Извините, что-то пошло не так.",
   };
 
   try {
-    const messagesForModel = [
-      { role: "system", content: systemPrompt },
-      ...chatHistory,
-      { role: "user", content: message },
-    ];
-
-    const response = await model.invoke(messagesForModel);
-
-    const raw =
-      typeof response?.content === "string"
-        ? response.content
-        : JSON.stringify(response?.content);
+    const result = await agent.ask(message, history);
+    console.log("ответ: ", result);
+    const output = typeof result.output === "string" ? result.output : JSON.stringify(result.output);
 
     try {
-      finalAnswer = JSON.parse(raw);
-    } catch (e) {
-      console.error("Ошибка парсинга JSON:", e);
-      finalAnswer = {
-        services: [],
-        message: raw || "Не удалось распознать ответ модели.",
-      };
+      const parsed = JSON.parse(output);
+      finalAnswer = Array.isArray(parsed)
+        ? { services: parsed, message: "Вот что я нашёл:" }
+        : parsed;
+    } catch {
+      finalAnswer.message = output;
     }
-  } catch (error: any) {
-    console.error("Ошибка AI запроса:", error);
-    throw createError({
-      statusCode: 500,
-      message: "Ошибка при обращении к ProxyAPI модели",
-    });
+  } catch (err: any) {
+    console.error("Agent error:", err);
+    finalAnswer.message = "Технические неполадки.";
   }
 
-  const userMessageToSave: IMessage = {
-    role: "user",
-    content: message,
-    author: userId,
-    isIncoming: false,
-    payload: null
-  };
-
-  const aiResponseToSave: IMessage = {
+  // === Сохраняем ===
+  const userMsg: IMessage = { role: "user", content: message, author: userId, isIncoming: false, payload: null };
+  const aiMsg: IMessage = {
     role: "assistant",
+    content: finalAnswer.message,
     author: -1,
     isIncoming: true,
-    content: finalAnswer.message,
-    payload: {
-      services: finalAnswer.services
-    }
+    payload: { services: finalAnswer.services },
   };
+
 
   await redis
     .multi()
-    .rPush(chatKey, JSON.stringify(userMessageToSave))
-    .rPush(chatKey, JSON.stringify(aiResponseToSave))
+    .rPush(chatKey, JSON.stringify(userMsg))
+    .rPush(chatKey, JSON.stringify(aiMsg))
     .lTrim(chatKey, -MAX_HISTORY_LENGTH, -1)
+    .expire(chatKey, 86400 * 7)
     .exec();
 
   return { output: finalAnswer };
