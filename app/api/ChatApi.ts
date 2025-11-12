@@ -12,7 +12,7 @@ export default {
     };
     console.log("--- Send message: ", toSend);
 
-    const data = await $fetch<{ output: any }>("/api/gigachat/agent", {
+    const data = await $fetch<{ output: any }>("/api/agent", {
       method: "POST",
       body: toSend,
     });
