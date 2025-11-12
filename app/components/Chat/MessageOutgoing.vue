@@ -1,5 +1,7 @@
 <script setup lang="ts">
-defineProps<{ message: IMessage }>();
+import type { IMessage, IMessageDB } from '~/types/message.interface';
+
+defineProps<{ message: IMessageDB | IMessage }>();
 </script>
 
 <template>

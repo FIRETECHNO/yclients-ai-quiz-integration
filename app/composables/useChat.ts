@@ -1,10 +1,12 @@
 import { ChatInput } from "#components";
 import { toast } from "vue3-toastify";
 import ChatApi from "~/api/ChatApi";
+import type { IMessage, IMessageDB } from "~/types/message.interface";
+
 
 export function useChat() {
   // Состояния
-  const messages = useState<IMessage[]>(() => []);
+  const messages = useState<(IMessageDB | IMessage)[]>(() => []);
   const chatStatus = useState<"ready" | "ai-thinking">("ready");
   const hints = useState<string[]>(() => []);
   const isLoadingHistory = ref(false);
@@ -36,13 +38,14 @@ export function useChat() {
 
     if (!companyId.value) throw new Error("Не выбрана компания!");
 
-    const messageOnClient = new Message(
-      "user",
-      question,
-      { services: [], recommended_services: [] },
-      false,
-      user.value?.id
-    );
+    const messageOnClient: IMessage = {
+      role: "user",
+      content: question,
+      isIncoming: false,
+      author: user.value?.id,
+      payload: null
+    }
+
 
     // Добавляем локально
     messages.value.push(messageOnClient);
@@ -90,8 +93,15 @@ export function useChat() {
   }
 
   // Добавление ответа от AI
-  async function setAiMessage(answer: string, payload?: any) {
-    const messageFromAI = new Message("assistant", answer, payload, true, -1);
+  async function setAiMessage(answer: string, payload: IMessageDB["payload"]) {
+    const messageFromAI = {
+      role: "assistant",
+      content: answer,
+      payload,
+      isIncoming: true,
+      author: -1
+    }
+
     messages.value.push(messageFromAI);
     messages.value = [...messages.value];
     chatStatus.value = "ready";

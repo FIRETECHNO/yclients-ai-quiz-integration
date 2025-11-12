@@ -74,7 +74,7 @@ watch(
                 Загрузка истории...
               </div>
               <div v-else>
-                <div v-for="msg of messages" :key="msg._id" class="mb-2">
+                <div v-for="(msg, index) of messages" :key="index" class="mb-2">
                   <ChatMessageIncoming v-if="msg.isIncoming" :message="msg" />
                   <ChatMessageOutgoing v-else :message="msg" />
                 </div>

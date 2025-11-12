@@ -1,10 +1,7 @@
-import { GigaChatChatModel } from "../../utils/gigachatLLM";
-import { getGigaToken } from "../../utils/gigachatAccessToken";
 import { useRedis } from "../../utils/redis";
-import { IMessage } from "~/types/message.interface.d";
-import { Message } from "~/utils/message";
+import type { IMessageDB } from "~~/server/types/IMessage.interface";
 
-export default defineEventHandler(async (event): Promise<IMessage[]> => {
+export default defineEventHandler(async (event): Promise<IMessageDB[]> => {
   const { companyId, userId } = getQuery(event);
 
   if (!companyId || !userId) {
@@ -25,16 +22,12 @@ export default defineEventHandler(async (event): Promise<IMessage[]> => {
       return [];
     }
 
-    // --- ВОТ ИСПРАВЛЕНИЕ ---
-    // Мы говорим TypeScript: "Я обещаю, что результат JSON.parse(msgString)
-    // можно считать объектом типа IMessage".
-    // Мы используем `as IMessage`
-    const messages: IMessage[] = messageStrings
+    const messages: IMessageDB[] = messageStrings
       .map((msgString) => {
         // Лучше парсить внутри блока try-catch на случай, если в Redis
         // окажется невалидный JSON. Это делает код более надежным.
         try {
-          return JSON.parse(msgString) as IMessage;
+          return JSON.parse(msgString) as IMessageDB;
         } catch (e) {
           console.error(
             `Не удалось распарсить сообщение из Redis: ${msgString}`,
@@ -43,19 +36,19 @@ export default defineEventHandler(async (event): Promise<IMessage[]> => {
           return null; // Возвращаем null, если JSON "битый"
         }
       })
-      .filter(Boolean) as IMessage[]; // .filter(Boolean) убирает все null из массива
+      .filter(Boolean) as IMessageDB[]; // .filter(Boolean) убирает все null из массива
     // const result = messages.map((msg) => {
     //   return new Message(msg.stringContent,);
     // });
-    const result: IMessage[] = messages.map((msg) => {
-      return new Message(
-        msg.role,
-        msg.content,
-        msg.payload,
-        msg.isIncoming,
-        msg.author,
-        msg._id
-      );
+    const result: IMessageDB[] = messages.map((msg) => {
+      return {
+        role: msg.role,
+        content: msg.content,
+        payload: msg.payload,
+        isIncoming: msg.isIncoming,
+        author: msg.author,
+        _id: msg._id
+      }
     });
     return result;
   } catch (error) {
