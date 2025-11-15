@@ -7,7 +7,7 @@ defineProps<{ message: IMessageDB | IMessage }>();
 <template>
   <div class="d-flex justify-md-end">
     <v-card class="text-card" color="#212121" rounded="lg">
-      <v-card-text style="overflow-wrap: anywhere">
+      <v-card-text style="overflow-wrap: anywhere" class="msg-text">
         {{ message.content }}
       </v-card-text>
     </v-card>
@@ -20,5 +20,9 @@ defineProps<{ message: IMessageDB | IMessage }>();
   width: fit-content;
   height: fit-content;
   overflow: auto;
+}
+
+.msg-text {
+  font-size: clamp(0.9375rem, 0.7884rem + 0.4261vw, 1.125rem);
 }
 </style>

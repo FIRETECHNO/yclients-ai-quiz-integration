@@ -26,8 +26,9 @@ function onFocusServiceClick() {
   <div class="d-flex justify-md-start">
     <v-card class="text-card" color="#212121" rounded="lg">
       <!-- Текст от AI -->
-      <v-card-text style="overflow-wrap: anywhere">
-        {{ message.content }}
+      <v-card-text style="overflow-wrap: anywhere" class="msg-text">
+        <p class="ai-response" v-html="message.content">
+        </p>
       </v-card-text>
 
       <!-- Список услуг -->
@@ -84,5 +85,20 @@ function onFocusServiceClick() {
   width: 90%;
   min-width: 60%;
   padding: 8px;
+}
+
+.msg-text {
+  font-size: clamp(0.9375rem, 0.7884rem + 0.4261vw, 1.125rem);
+}
+
+.ai-response :deep(a) {
+  color: #e53935;
+  text-decoration: none;
+  font-weight: 600;
+  border-bottom: 1px dashed #e53935;
+}
+
+.ai-response :deep(a:hover) {
+  opacity: 0.8;
 }
 </style>
