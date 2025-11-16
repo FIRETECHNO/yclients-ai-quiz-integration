@@ -2,7 +2,11 @@
 definePageMeta({
   layout: "chat-layout",
 });
-
+// import {
+//   PATTERN_BACKGROUND_DIRECTION,
+//   PATTERN_BACKGROUND_SPEED,
+//   PATTERN_BACKGROUND_VARIANT,
+// } from "../../ui/pattern-background";
 import { useScroll } from "@vueuse/core";
 
 const chatStore = useChat();
@@ -64,7 +68,8 @@ watch(
   <v-container fluid class="fill-height">
     <v-row class="d-flex justify-center align-center fill-height">
       <v-col cols="12" md="8" xl="6" class="d-flex flex-column fill-height">
-        <v-sheet class="d-flex flex-column justify-center fill-height rounded-lg elevation-0" color="#121212">
+        <v-sheet class="d-flex flex-column justify-center fill-height rounded-lg elevation-0" color="transparent">
+
           <!-- Сообщения -->
           <v-card-text v-if="messages.length > 0" class="flex-grow-1" style="overflow: hidden; padding: 0"
             position="absolute">
@@ -80,6 +85,30 @@ watch(
               </div>
             </div>
           </v-card-text>
+          <div v-else class="relative flex h-[500px] w-full items-center justify-center overflow-hidden flex-column">
+            <span class="pointer-events-none z-10 bg-gradient-to-b from-white to-white/70
+         bg-clip-text text-transparent text-center text-3xl font-semibold leading-none drop-shadow-md">
+              Добро пожаловать
+            </span>
+            <span class="mt-6 pointer-events-none z-10 bg-gradient-to-b from-white to-white/70
+         bg-clip-text text-transparent text-center text-2xl font-semibold leading-none drop-shadow-md">
+              Новая степень комфорта и стрижки для вас
+            </span>
+          </div>
+
+          <!-- <v-card-text v-if="messages.length == 0" class="d-flex align-center justify-center">
+            <PatternBackground :animate="true" :direction="PATTERN_BACKGROUND_DIRECTION.TopRight"
+              :variant="PATTERN_BACKGROUND_VARIANT.Dot" class="flex h-[36rem] w-full items-center justify-center"
+              :speed="PATTERN_BACKGROUND_SPEED.Slow">
+              <p
+                class="relative z-20 bg-gradient-to-b from-neutral-200 to-neutral-500 bg-clip-text py-8 text-4xl font-bold text-transparent sm:text-5xl">
+                Dot Background
+              </p>
+            </PatternBackground>
+          </v-card-text> -->
+
+
+          <!-- <p class="text-h4 font-weight-medium">Добро пожаловать</p> -->
 
           <!-- Элементы для взаимодействия -->
           <div class="position-relative">
