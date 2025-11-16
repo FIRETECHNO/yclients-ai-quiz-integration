@@ -1,129 +1,106 @@
+<!-- components/ServiceCard.vue -->
 <script setup lang="ts">
-defineProps<{ service: IService }>();
-const emit = defineEmits<{
-  book: [service: IService];
+import type { IShortService } from "~~/server/types/IShortService.interface";
+
+let props = defineProps<{
+  service: IShortService;
 }>();
 
-function bookService(service: IService) {
-  emit("book", service);
+const service = props.service;
+const router = useRouter()
+const { BOOKING_URL } = useYclients()
+
+// 18691150
+
+function toBooking() {
+  let serviceUrl = new URL(`company/894109/personal/select-services?o=s${service.id}`, BOOKING_URL).toString()
+  router.push(`/booking?url-to-open=${serviceUrl}`)
 }
 </script>
+
 <template>
-  <v-card class="service-card" variant="outlined">
-    <v-card-title class="service-title">
-      {{ service.serviceName }}
-    </v-card-title>
-    <v-card-text class="service-content d-flex">
-      <div class="image-container">
-        <v-img
-          v-if="service.imagePath"
-          :src="service.imagePath"
-          alt="service"
-          cover
-          class="service-image"
-        />
-      </div>
-      <div class="right-content d-flex flex-column">
-        <div class="service-info">
-          <div class="service-duration">
-            {{ Math.round(service.duration / 60) }} минут
-          </div>
-          <div class="service-comment">{{ service.priceMax }} ₽</div>
-        </div>
-        <v-btn class="book-btn" @click.stop="bookService(service)" size="small">
-          Запись
-        </v-btn>
-      </div>
-    </v-card-text>
-  </v-card>
+  <div class="service-card" @click="toBooking">
+    <!-- Фото слева -->
+    <div class="service-image" v-if="service.photos && service.photos[0]">
+      <img :src="service.photos[0].path" alt="" loading="lazy" />
+    </div>
+
+    <!-- Контент справа -->
+    <div class="service-content">
+      <h3 class="service-title">{{ service.name }}</h3>
+      <p v-if="service.description" class="service-desc">{{ service.description }}</p>
+      <div class="service-price">{{ service.price }}</div>
+    </div>
+  </div>
 </template>
+
 <style scoped>
 .service-card {
-  border: 2px solid #4b4848;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  background: rgb(74, 69, 69);
-  height: 100%;
   display: flex;
-  flex-direction: column;
-}
-
-.service-card:hover {
-  border-color: #000000;
-  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.2);
-}
-
-.service-title {
-  font-size: 1rem;
-  font-weight: 600;
-  padding: 12px 12px 8px 12px;
-  border-bottom: 1px solid #333232;
-  word-break: break-word;
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-
-.service-content {
-  padding: 12px;
-  gap: 12px;
-  flex: 1;
-  display: flex;
-  align-items: stretch;
-  min-height: 120px;
-}
-
-.image-container {
-  flex-shrink: 0;
-  display: flex;
+  flex-direction: row;
   align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: #2d2d2d;
+  border-radius: 14px;
+  max-width: 100%;
+  margin-top: 12px;
+  border: 1px solid #3c3c3c;
+  cursor: pointer;
 }
 
 .service-image {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  object-position: center;
-  border-radius: 4px;
-  border: 1px solid #313131;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #444;
 }
 
-.right-content {
+.service-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.service-content {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  height: 80px; /* Такая же высота как у фото */
+  gap: 4px;
 }
 
-.service-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-}
-
-.service-comment {
-  white-space: normal;
-  word-break: break-word;
-  line-height: 1.4;
-  color: #c6c6c6;
-  margin: 0;
-}
-
-.service-duration {
-  font-weight: 500;
-  color: #c6c6c6;
-  margin: 0;
-  margin-bottom: 4px;
-}
-
-.book-btn {
-  width: 100%;
-  border-radius: 6px;
+.service-title {
+  font-size: 15px;
   font-weight: 600;
-  text-transform: none;
+  color: #fff;
   margin: 0;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.service-desc {
+  font-size: 13px;
+  color: #aaa;
+  margin: 0;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.service-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #4caf50;
   margin-top: auto;
-  flex-shrink: 0;
 }
 </style>

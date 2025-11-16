@@ -4,6 +4,13 @@ import { toast } from 'vue3-toastify';
 let { BOOKING_URL, updateRecordComment, quizComment } = useYclients()
 let route = useRoute();
 
+let urlToOpen = ref<string>()
+urlToOpen.value = BOOKING_URL;
+
+const urlFromQuery = route.query["url-to-open"] as string
+if (urlFromQuery) {
+  urlToOpen.value = urlFromQuery;
+}
 
 onMounted(() => {
   if (route.query.quiz_comment) {
@@ -37,7 +44,7 @@ onMounted(() => {
 <template>
   <div>
     <iframe max-width="320px" frameborder="0" allowtransparency="true" id="ms_booking_iframe" class="iframe"
-      :src="BOOKING_URL"></iframe>
+      :src="urlToOpen"></iframe>
   </div>
 </template>
 <style scoped lang="scss">

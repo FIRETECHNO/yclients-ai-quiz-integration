@@ -12,5 +12,5 @@ export interface IMessageDB extends IMessage {
 }
 
 type PayloadType = {
-  services: string[]
+  services: number[]
 }

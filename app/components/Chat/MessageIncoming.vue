@@ -2,24 +2,27 @@
 import { toRaw } from "vue";
 import ServiceCard from "./ServiceCard.vue";
 import type { IMessageDB } from "~~/server/types/IMessage.interface";
-import type { IService } from "~/types/service.interface";
 import type { IMessage } from "~/types/message.interface";
+import type { IShortService } from "~~/server/types/IShortService.interface";
 
 const props = defineProps<{ message: IMessageDB | IMessage }>();
 const chatStore = useChat();
+const serviceStore = useServices()
 
-const focusService = ref<string | null>(null);
-
-function onServiceClick(service: string) {
-  console.log("Clicked service raw:", toRaw(service));
-  focusService.value = service;
-}
-
-function onFocusServiceClick() {
-  if (focusService.value) {
-    console.log("Clicked service details:", focusService.value);
+let servicesToShow = computed<IShortService[]>(() => {
+  let res: IShortService[] = []
+  if (!props.message.payload?.services) {
+    return []
   }
-}
+  for (let id of props.message.payload?.services) {
+    let found = serviceStore.getServiceById(id);
+    if (found) {
+      res.push(found)
+    }
+  }
+
+  return res
+})
 </script>
 
 <template>
@@ -27,27 +30,13 @@ function onFocusServiceClick() {
     <v-card class="text-card" color="#212121" rounded="lg">
       <!-- Текст от AI -->
       <v-card-text style="overflow-wrap: anywhere" class="msg-text">
-        <p class="ai-response" v-html="message.content">
-        </p>
+        <p class="ai-response" v-html="message.content"></p>
       </v-card-text>
 
-      <!-- Список услуг -->
-      <div v-if="message?.payload">
-        <v-card v-if="message.payload?.services?.length" class="text-card mt-2" color="#212121" rounded="lg">
-          <v-chip v-for="(service, index) in message.payload.services" :key="index" size="x-large"
-            @click="onServiceClick(service)" class="mr-2 mb-2" color="green" outlined small clickable>
-            {{ service }}
-          </v-chip>
-        </v-card>
+      <!-- Карточки услуг -->
+      <div v-for="service in servicesToShow" :key="service.id" class="px-4 pb-2">
+        <ChatServiceCard :service="service" />
       </div>
-
-      <!-- Детали выбранной услуги -->
-      <v-card v-if="focusService" class="focus-service" @click="onFocusServiceClick" color="gray" variant="outlined">
-        <v-card-title>
-          Процедура:
-          {{ focusService }}
-        </v-card-title>
-      </v-card>
     </v-card>
   </div>
 </template>
