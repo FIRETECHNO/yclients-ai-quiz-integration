@@ -2,6 +2,18 @@ import { DynamicStructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import { IShortService } from "../types/IShortService.interface";
 
+
+const isCoreService = (name: string): boolean => {
+  const coreKeywords = [
+    'стрижка', 'борода', 'машинкой', 'окантовка', 'бре', 'брит', 'укладка',
+    'комплекс', 'моделирование', 'оформление', 'брить', 'детская', 'первая',
+    'спа-моделирование', 'спа моделирование', 'укладка'
+  ];
+  const lower = name.toLowerCase();
+  return coreKeywords.some(kw => lower.includes(kw));
+};
+
+
 export const createBarberTools = (availableServices: IShortService[]) => {
   // Создаём Set числовых ID для быстрой проверки
   const serviceIdSet = new Set<number>(
@@ -32,7 +44,7 @@ export const createBarberTools = (availableServices: IShortService[]) => {
         service_ids: z
           .array(z.number().int()) // ← строго целые числа
           .describe(`Массив ID услуг. Доступные: [${serviceIdList}]`)
-          .optional()
+          // .optional()
           .default([]),
         message: z
           .string()
@@ -42,14 +54,25 @@ export const createBarberTools = (availableServices: IShortService[]) => {
       }),
 
       func: async ({ service_ids, message }) => {
-        // Фильтруем только валидные числовые ID
         const validIds = service_ids.filter(id => serviceIdSet.has(id));
 
-        // 🔥 Если нужно — здесь можно получить полные данные об услугах:
-        // const validServices = availableServices.filter(s => validIds.includes(s.id));
+        // --- НОВОЕ: добавляем одну extra-услугу, если её нет ---
+        const extraServices = availableServices.filter(s => !isCoreService(s.name));
+        const hasExtra = validIds.some(id => extraServices.some(s => s.id === id));
+
+        let resultIds = validIds;
+        if (!hasExtra && extraServices.length > 0) {
+          const randomExtra = extraServices[Math.floor(Math.random() * extraServices.length)];
+          // Добавляем, но не более 3 услуг всего
+          resultIds = [...validIds.slice(0, 2), randomExtra.id];
+        }
+
+        // Убираем возможные дубли и ограничиваем до 3
+        const uniqueIds = Array.from(new Set(resultIds)).slice(0, 3);
+        // ---
 
         return JSON.stringify({
-          services: validIds, // ← остаётся массивом чисел [123, 456]
+          services: uniqueIds,
           message: message.trim(),
         });
       },

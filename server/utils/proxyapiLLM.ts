@@ -11,6 +11,7 @@ export class ProxyAPIChatModel extends ChatOpenAI {
       configuration: {
         baseURL: "https://api.proxyapi.ru/openai/v1",
       },
+      verbose: false,
       modelKwargs: {
         response_format: { type: "json_object" }
       }
