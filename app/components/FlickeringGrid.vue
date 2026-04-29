@@ -1,6 +1,6 @@
 <template>
   <div ref="containerRef" :class="cn('w-full h-full', props.class)">
-    <canvas ref="canvasRef" class="pointer-events-none" :width="canvasSize.width" :height="canvasSize.height" />
+    <canvas ref="canvasRef" class="pointer-events-none" />
   </div>
 </template>
 
@@ -34,7 +34,6 @@ const canvasRef = ref<HTMLCanvasElement>();
 const context = ref<CanvasRenderingContext2D>();
 
 const isInView = ref(false);
-const canvasSize = ref({ width: 0, height: 0 });
 
 const computedColor = computed(() => {
   if (!context.value) return "rgba(255, 0, 0,";
@@ -47,6 +46,9 @@ const computedColor = computed(() => {
   return `rgba(${r}, ${g}, ${b},`;
 });
 
+const MAX_BITMAP_EDGE = 1600;
+const MAX_DPR = 1.25;
+
 function setupCanvas(
   canvas: HTMLCanvasElement,
   width: number,
@@ -57,14 +59,17 @@ function setupCanvas(
   squares: Float32Array;
   dpr: number;
 } {
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = width * dpr;
-  canvas.height = height * dpr;
-  canvas.style.width = `${width}px`;
-  canvas.style.height = `${height}px`;
+  const rawDpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+  const dpr = Math.min(rawDpr, MAX_DPR);
+  const wPx = Math.min(width, MAX_BITMAP_EDGE);
+  const hPx = Math.min(height, MAX_BITMAP_EDGE);
+  canvas.width = Math.max(1, Math.floor(wPx * dpr));
+  canvas.height = Math.max(1, Math.floor(hPx * dpr));
+  canvas.style.width = `${wPx}px`;
+  canvas.style.height = `${hPx}px`;
 
-  const cols = Math.floor(width / (squareSize.value + gridGap.value));
-  const rows = Math.floor(height / (squareSize.value + gridGap.value));
+  const cols = Math.floor(wPx / (squareSize.value + gridGap.value));
+  const rows = Math.floor(hPx / (squareSize.value + gridGap.value));
 
   const squares = new Float32Array(cols * rows);
   for (let i = 0; i < squares.length; i++) {
@@ -74,8 +79,13 @@ function setupCanvas(
 }
 
 function updateSquares(squares: Float32Array, deltaTime: number) {
-  for (let i = 0; i < squares.length; i++) {
-    if (Math.random() < flickerChance.value * deltaTime) {
+  const n = squares.length;
+  if (n === 0) return;
+  // Не трогаем каждую ячейку каждый кадр — дешевле на мобильных
+  const budget = Math.max(32, Math.min(480, Math.floor(n * 0.08)));
+  for (let b = 0; b < budget; b++) {
+    const i = (Math.random() * n) | 0;
+    if (Math.random() < flickerChance.value * deltaTime * 12) {
       squares[i] = Math.random() * maxOpacity.value;
     }
   }
@@ -110,10 +120,13 @@ function drawGrid(
 const gridParams = ref<ReturnType<typeof setupCanvas>>();
 
 function updateCanvasSize() {
-  const newWidth = width.value || containerRef.value!.clientWidth;
-  const newHeight = height.value || containerRef.value!.clientHeight;
+  const wProp = width.value;
+  const hProp = height.value;
+  const cw = containerRef.value!.clientWidth || 1;
+  const ch = containerRef.value!.clientHeight || 1;
+  const newWidth = wProp != null && wProp > 0 ? wProp : cw;
+  const newHeight = hProp != null && hProp > 0 ? hProp : ch;
 
-  canvasSize.value = { width: newWidth, height: newHeight };
   gridParams.value = setupCanvas(canvasRef.value!, newWidth, newHeight);
 }
 
@@ -121,24 +134,57 @@ let animationFrameId: number | undefined;
 let resizeObserver: ResizeObserver | undefined;
 let intersectionObserver: IntersectionObserver | undefined;
 let lastTime = 0;
+let lastRenderTime = 0;
+/** ~28 fps: меньше нагрузка на GPU/CPU чем полные 60 */
+const MIN_FRAME_MS = 1000 / 28;
+
+let reduceMotion = false;
+
+function scheduleFrame() {
+  if (animationFrameId != null) cancelAnimationFrame(animationFrameId);
+  animationFrameId = requestAnimationFrame(animate);
+}
 
 function animate(time: number) {
-  if (!isInView.value) return;
+  animationFrameId = undefined;
 
-  const deltaTime = (time - lastTime) / 1000;
+  if (!isInView.value || !gridParams.value || !context.value || !canvasRef.value) {
+    return;
+  }
+
+  if (reduceMotion) {
+    drawGrid(
+      context.value,
+      canvasRef.value.width,
+      canvasRef.value.height,
+      gridParams.value.cols,
+      gridParams.value.rows,
+      gridParams.value.squares,
+      gridParams.value.dpr,
+    );
+    return;
+  }
+
+  if (time - lastRenderTime < MIN_FRAME_MS) {
+    scheduleFrame();
+    return;
+  }
+  lastRenderTime = time;
+
+  const deltaTime = lastTime ? Math.min((time - lastTime) / 1000, 0.05) : 1 / 60;
   lastTime = time;
 
-  updateSquares(gridParams.value!.squares, deltaTime);
+  updateSquares(gridParams.value.squares, deltaTime);
   drawGrid(
-    context.value!,
-    canvasRef.value!.width,
-    canvasRef.value!.height,
-    gridParams.value!.cols,
-    gridParams.value!.rows,
-    gridParams.value!.squares,
-    gridParams.value!.dpr,
+    context.value,
+    canvasRef.value.width,
+    canvasRef.value.height,
+    gridParams.value.cols,
+    gridParams.value.rows,
+    gridParams.value.squares,
+    gridParams.value.dpr,
   );
-  animationFrameId = requestAnimationFrame(animate);
+  scheduleFrame();
 }
 
 onMounted(() => {
@@ -146,15 +192,52 @@ onMounted(() => {
   context.value = canvasRef.value.getContext("2d")!;
   if (!context.value) return;
 
+  reduceMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   updateCanvasSize();
+
+  if (
+    reduceMotion &&
+    gridParams.value &&
+    context.value &&
+    canvasRef.value
+  ) {
+    drawGrid(
+      context.value,
+      canvasRef.value.width,
+      canvasRef.value.height,
+      gridParams.value.cols,
+      gridParams.value.rows,
+      gridParams.value.squares,
+      gridParams.value.dpr,
+    );
+  }
 
   resizeObserver = new ResizeObserver(() => {
     updateCanvasSize();
+    if (reduceMotion && gridParams.value) {
+      drawGrid(
+        context.value!,
+        canvasRef.value!.width,
+        canvasRef.value!.height,
+        gridParams.value.cols,
+        gridParams.value.rows,
+        gridParams.value.squares,
+        gridParams.value.dpr,
+      );
+    }
   });
   intersectionObserver = new IntersectionObserver(
     ([entry]) => {
       isInView.value = entry?.isIntersecting ?? true;
-      animationFrameId = requestAnimationFrame(animate);
+      if (animationFrameId != null) cancelAnimationFrame(animationFrameId);
+      if (isInView.value) {
+        lastTime = 0;
+        lastRenderTime = 0;
+        scheduleFrame();
+      }
     },
     { threshold: 0 },
   );
@@ -164,8 +247,9 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  if (animationFrameId) {
+  if (animationFrameId != null) {
     cancelAnimationFrame(animationFrameId);
+    animationFrameId = undefined;
   }
   resizeObserver?.disconnect();
   intersectionObserver?.disconnect();

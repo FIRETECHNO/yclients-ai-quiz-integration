@@ -27,7 +27,7 @@ let servicesToShow = computed<IShortService[]>(() => {
 
 <template>
   <div class="d-flex justify-md-start">
-    <v-card class="text-card" color="#212121" rounded="lg">
+    <v-card class="text-card ios-glass-bubble-in" flat color="transparent" rounded="lg">
       <!-- Текст от AI -->
       <v-card-text style="overflow-wrap: anywhere" class="msg-text">
         <p class="ai-response" v-html="message.content"></p>
@@ -78,13 +78,14 @@ let servicesToShow = computed<IShortService[]>(() => {
 
 .msg-text {
   font-size: clamp(0.9375rem, 0.7884rem + 0.4261vw, 1.125rem);
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .ai-response :deep(a) {
-  color: #e53935;
+  color: #7ecbff;
   text-decoration: none;
   font-weight: 600;
-  border-bottom: 1px dashed #e53935;
+  border-bottom: 1px dashed rgba(126, 203, 255, 0.55);
 }
 
 .ai-response :deep(a:hover) {

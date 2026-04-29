@@ -66,15 +66,18 @@ watch(
 </script>
 
 <template>
-  <v-container fluid class="fill-height">
+  <v-container fluid class="fill-height chat-page-ios">
     <v-row class="d-flex justify-center align-center fill-height">
-      <v-col cols="12" md="8" xl="6" class="d-flex flex-column fill-height">
-        <v-sheet class="d-flex flex-column justify-center fill-height rounded-lg elevation-0" color="transparent">
+      <v-col cols="12" md="8" xl="6" class="d-flex flex-column fill-height px-3 px-md-4">
+        <v-sheet
+          class="chat-glass-column d-flex flex-column justify-center fill-height rounded-[28px] elevation-0 overflow-hidden ios-glass-panel"
+          color="transparent"
+        >
 
           <!-- Сообщения -->
-          <v-card-text v-if="messages.length > 0" class="flex-grow-1" style="overflow: hidden; padding: 0"
+          <v-card-text v-if="messages.length > 0" class="flex-grow-1 chat-messages-area" style="overflow: hidden; padding: 0"
             position="absolute">
-            <div ref="messagesContainer" class="h-100 overflow-y-auto" style="padding: 16px">
+            <div ref="messagesContainer" class="h-100 overflow-y-auto chat-messages-scroll">
               <div v-if="isLoadingHistory" class="text-center">
                 Загрузка истории...
               </div>
@@ -86,13 +89,11 @@ watch(
               </div>
             </div>
           </v-card-text>
-          <div v-else class="relative flex h-[500px] w-full items-center justify-center overflow-hidden flex-column">
-            <span class="pointer-events-none z-10 bg-gradient-to-b from-white to-white/70
-         bg-clip-text text-transparent text-center text-3xl font-semibold leading-none drop-shadow-md">
+          <div v-else class="relative flex min-h-[420px] flex-1 w-full items-center justify-center overflow-hidden flex-column px-6 py-12">
+            <span class="pointer-events-none z-10 text-center text-3xl font-semibold leading-tight tracking-tight text-white/95 drop-shadow-[0_2px_24px_rgba(0,0,0,0.45)]">
               Добро пожаловать
             </span>
-            <span class="mt-6 pointer-events-none z-10 bg-gradient-to-b from-white to-white/70
-         bg-clip-text text-transparent text-center text-2xl font-semibold leading-none drop-shadow-md">
+            <span class="mt-4 pointer-events-none z-10 text-center text-lg font-medium leading-snug text-white/65 max-w-md">
               Новая степень комфорта и стрижки для вас
             </span>
           </div>
@@ -112,17 +113,24 @@ watch(
           <!-- <p class="text-h4 font-weight-medium">Добро пожаловать</p> -->
 
           <!-- Элементы для взаимодействия -->
-          <div class="position-relative">
+          <div class="position-relative chat-input-stack flex-shrink-0">
             <!-- Подсказки поверх поля ввода -->
             <div v-if="hints.length > 0" class="hints-floating">
-              <v-chip v-for="(quest, index) of hints" :key="index" size="x-large" @click="onHintClick(index)"
-                class="mr-2 mb-2" color="green" outlined small clickable>
+              <v-chip
+                v-for="(quest, index) of hints"
+                :key="index"
+                size="large"
+                class="mr-2 mb-2 ios-glass-chip"
+                variant="flat"
+                clickable
+                @click="onHintClick(index)"
+              >
                 {{ quest }}
               </v-chip>
             </div>
 
             <!-- Поле ввода -->
-            <v-card-actions>
+            <v-card-actions class="chat-input-dock ios-glass-dock pa-3 pa-md-4">
               <ChatInput @send-message="processSubmit" class="w-100" />
             </v-card-actions>
           </div>
@@ -133,14 +141,42 @@ watch(
 </template>
 
 <style scoped lang="scss">
+.chat-page-ios :deep(.v-container) {
+  max-width: 100%;
+}
+
+.chat-glass-column {
+  min-height: 0;
+}
+
+.chat-messages-area {
+  padding-bottom: 0 !important;
+}
+
+.chat-messages-scroll {
+  padding: 20px 18px 12px;
+}
+
+.chat-input-dock {
+  border-radius: 22px 22px 0 0;
+  border-bottom: none;
+}
+
+.chat-input-stack {
+  margin-top: auto;
+}
+
 .hints-floating {
   position: absolute;
   bottom: 100%;
-  right: 16px;
+  right: 8px;
+  left: 8px;
   z-index: 1000;
   display: flex;
   flex-wrap: wrap;
-  padding: 8px 16px;
+  justify-content: flex-end;
+  padding: 8px 8px 12px;
   overflow-y: auto;
+  gap: 4px;
 }
 </style>

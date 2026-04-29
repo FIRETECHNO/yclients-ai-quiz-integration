@@ -19,7 +19,7 @@ function toBooking() {
 </script>
 
 <template>
-  <div class="service-card" @click="toBooking">
+  <div class="service-card ios-glass-card" @click="toBooking">
     <!-- Фото слева -->
     <div class="service-image" v-if="service.photos && service.photos[0]">
       <img :src="service.photos[0].path" alt="" loading="lazy" />
@@ -41,12 +41,16 @@ function toBooking() {
   align-items: flex-start;
   gap: 12px;
   padding: 12px;
-  background: #2d2d2d;
-  border-radius: 14px;
+  border-radius: 16px;
   max-width: 100%;
   margin-top: 12px;
-  border: 1px solid #3c3c3c;
   cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.service-card:hover {
+  transform: scale(1.01);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
 }
 
 .service-image {
